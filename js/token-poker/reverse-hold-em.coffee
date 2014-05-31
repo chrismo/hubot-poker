@@ -10,7 +10,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     super(@store, @round)
     @playerStore = @store.playerStore ||= []
     @round ||= new Rounds.TimedRound(2)
-    @playState = new HandsPlayState
+    @playState = new HandsPlayState(this)
     @pot = new Pot(1)
     @betDuration = 1 # minute
 
@@ -89,7 +89,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     @round.setAlarm(0, this, this.finishRound)
 
   startBetting: ->
-    @playState = new BetPlayState
+    @playState = new BetPlayState(this)
     this.pushStatus("Hands are locked. Time to bet. Type 'bet' and a number.")
     this.pushStatus("Type 'call' to stay in by matching highest bet.")
     this.pushStatus("Type 'fold' to fold and forfeit anything bet already.")
@@ -102,7 +102,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     @pot.settleUp()
     @pot.goesTo(@winningHandResult.player) if @winningHandResult
     this.pushStatus(this.showBoard())
-    @playState = new HandsPlayState
+    @playState = new HandsPlayState(this)
 
   applyHoleDigits: ->
     for playerName, handResult of @boardStore
@@ -119,8 +119,7 @@ module.exports = class ReverseHoldEm extends BaseGame
   showBoard: ->
     # TODO: trim player name
     width = 56
-    remaining = @round.minutesLeft()
-    remaining = remaining - @betDuration if @playState.name == 'play'
+    remaining = @playState.remainingMinutes()
     remainingText = if (remaining >= 1) then "#{remaining} min" else "soon"
 
     holeDigits = if @round.isOver() then @holeDigits.join(' ') else 'X X'
@@ -129,18 +128,12 @@ module.exports = class ReverseHoldEm extends BaseGame
     status = if @round.isOver()
       "Winner: #{@winningHandResult.playerName}".rjust(width - title.length)
     else
-      action = if @playState.name == 'play' then 'Bet' else 'Flop'
-      # TODO: Time to bet shows total time, not total minus 1
+      action = @playState.nextStateLabel()
       "Time to #{action}: #{remainingText}".rjust(width - title.length)
-
-    inst = if @playState.name == 'bet'
-      'bet [xx] | call | fold  ||  ** auto-call in effect **'
-    else
-      ''
 
     header = [
       "#{title}#{status}",
-      inst.center(width),
+      @playState.boardInstructions().center(width),
       "                                                 POT/ALL",
       ''
     ]
@@ -163,9 +156,27 @@ class HandResult
     @playerHand = @playerHand.replace(/\s+/g, '').replace(/\d\d\d/, "$& ")
 
 class HandsPlayState
-  constructor: ->
+  constructor: (@game) ->
     @name = 'play'
 
+  remainingMinutes: ->
+    @game.round.minutesLeft() - @game.betDuration
+
+  nextStateLabel: ->
+    'Bet'
+
+  boardInstructions: ->
+    ''
+
 class BetPlayState
-  constructor: ->
+  constructor: (@game) ->
     @name = 'bet'
+
+  remainingMinutes: ->
+    @game.round.minutesLeft()
+
+  nextStateLabel: ->
+    'Flop'
+
+  boardInstructions: ->
+    'bet [xx] | call | fold  ||  ** auto-call in effect **'
