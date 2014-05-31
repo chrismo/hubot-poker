@@ -3,7 +3,6 @@ BaseGame = require ('./base-game')
 Player = require('./player')
 Pot = require('./pot')
 Rounds = require('./round')
-SkinnyCoffeeMachine = require('skinny-coffee-machine')
 TokenPoker = require('./core')
 
 module.exports = class ReverseHoldEm extends BaseGame
@@ -11,25 +10,19 @@ module.exports = class ReverseHoldEm extends BaseGame
     super(@store, @round)
     @playerStore = @store.playerStore ||= []
     @round ||= new Rounds.TimedRound(2)
-    @playState = new SkinnyCoffeeMachine
-      default: 'play'
-      events:
-        startBetting:
-          play: 'bet'
-        finishRound:
-          bet: 'play'
+    @playState = new HandsPlayState
     @pot = new Pot(1)
     @betDuration = 1 # minute
 
   diagnostic: ->
     "\nReverseHoldEm\n\n" +
-    "@playState: #{@playState.currentState()}\n" +
+    "@playState: #{@playState.name}\n" +
     "@playerStore: #{([player.name, player.points] for player in @playerStore).join(',')}\n" +
     (if @round.diagnostic then @round.diagnostic() else '') +
     (if @pot.diagnostic then @pot.diagnostic() else '')
 
   play: (playerName, playerHand) ->
-    throw "Hands are locked. Time to bet." unless @playState.currentState() == 'play'
+    throw "Hands are locked. Time to bet." unless @playState.name == 'play'
     this.ensureRoundStarted()
     player = this.ensurePlayerInStore(playerName)
     this.storeHandResult(new HandResult(player, playerHand, @matcher.matchHighest(playerHand)))
@@ -52,10 +45,10 @@ module.exports = class ReverseHoldEm extends BaseGame
     null
 
   vetPlayerForBetting: (playerName) ->
-    throw "No bets yet." unless @playState.currentState() == 'bet'
+    throw "No bets yet." unless @playState.name == 'bet'
     player = this.getPlayerFromStore(playerName)
     throw "Can't bet if you haven't played." unless player && @boardStore[playerName]
-    return player;
+    return player
 
   fundPlayer: (playerName, amount) ->
     player = this.getPlayerFromStore(playerName)
@@ -96,7 +89,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     @round.setAlarm(0, this, this.finishRound)
 
   startBetting: ->
-    @playState.switch('startBetting')
+    @playState = new BetPlayState
     this.pushStatus("Hands are locked. Time to bet. Type 'bet' and a number.")
     this.pushStatus("Type 'call' to stay in by matching highest bet.")
     this.pushStatus("Type 'fold' to fold and forfeit anything bet already.")
@@ -109,7 +102,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     @pot.settleUp()
     @pot.goesTo(@winningHandResult.player) if @winningHandResult
     this.pushStatus(this.showBoard())
-    @playState.switch('finishRound')
+    @playState = new HandsPlayState
 
   applyHoleDigits: ->
     for playerName, handResult of @boardStore
@@ -127,7 +120,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     # TODO: trim player name
     width = 56
     remaining = @round.minutesLeft()
-    remaining = remaining - @betDuration if @playState.currentState() == 'play'
+    remaining = remaining - @betDuration if @playState.name == 'play'
     remainingText = if (remaining >= 1) then "#{remaining} min" else "soon"
 
     holeDigits = if @round.isOver() then @holeDigits.join(' ') else 'X X'
@@ -136,11 +129,11 @@ module.exports = class ReverseHoldEm extends BaseGame
     status = if @round.isOver()
       "Winner: #{@winningHandResult.playerName}".rjust(width - title.length)
     else
-      action = if @playState.currentState() == 'play' then 'Bet' else 'Flop'
+      action = if @playState.name == 'play' then 'Bet' else 'Flop'
       # TODO: Time to bet shows total time, not total minus 1
       "Time to #{action}: #{remainingText}".rjust(width - title.length)
 
-    inst = if @playState.currentState() == 'bet'
+    inst = if @playState.name == 'bet'
       'bet [xx] | call | fold  ||  ** auto-call in effect **'
     else
       ''
@@ -168,3 +161,11 @@ class HandResult
   constructor: (@player, @playerHand, @hand) ->
     @playerName = @player.name
     @playerHand = @playerHand.replace(/\s+/g, '').replace(/\d\d\d/, "$& ")
+
+class HandsPlayState
+  constructor: ->
+    @name = 'play'
+
+class BetPlayState
+  constructor: ->
+    @name = 'bet'
