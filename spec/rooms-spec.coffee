@@ -16,7 +16,7 @@ describe 'Rooms', ->
   it 'should have a list of supported rooms', ->
     rooms.restrictToRooms(['a', 'b'])
     expect(rooms.getDealerForRoom('a').room).toBe 'a'
-    expect(-> (rooms.getDealerForRoom('c'))).toThrow new Error 'No poker in here. Check out the Games campfire.'
+    expect(-> (rooms.getDealerForRoom('c'))).toThrow 'No poker in this room.'
 
   dealerFactory = (room) ->
     new FakeDealer(room)

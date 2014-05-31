@@ -126,5 +126,21 @@ describe 'Pot with ante', ->
     pot.bet(a, '12')
     expect(a.points).toBe 7
 
+  it 'should handle call method to settle up an individual', ->
+    a = new FakePlayer(21, 'a')
+    b = new FakePlayer(21, 'b')
+    c = new FakePlayer(21, 'c')
+    pot.addPlayer(a)
+    pot.addPlayer(b)
+    pot.addPlayer(c)
+    pot.bet(a, '15')
+    pot.bet(b, '10')
+    pot.bet(c, '5')
+    pot.call(b)
+    expect(a.points).toBe 5
+    expect(b.points).toBe 5
+    expect(c.points).toBe 15
+
+
 class FakePlayer
   constructor: (@points, @name) ->

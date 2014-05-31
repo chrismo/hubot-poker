@@ -37,16 +37,24 @@ module.exports = class Pot
     throw "player #{player.name} not added." unless this.playerAlreadyAdded(player)
     this.addToPot(player, parseInt(amount))
 
+  call: (player) ->
+    throw "player #{player.name} not added." unless this.playerAlreadyAdded(player)
+    owed = this.maxBet() - player.totalBet
+    this.bet(player, owed)
+
   playerAlreadyAdded: (player) ->
     _.find(@players, (p) -> (p.name == player.name)) != undefined
 
   settleUp: ->
-    playerAmounts = (player.totalBet for player in @players)
-    maxAmount = _.max(playerAmounts)
+    maxAmount = this.maxBet()
     for player in @players
       owed = maxAmount - player.totalBet
       owed = Math.min(player.points, owed)
       this.addToPot(player, owed)
+
+  maxBet: ->
+    playerAmounts = (player.totalBet for player in @players)
+    _.max(playerAmounts)
 
   fold: (player) ->
     @players = _.without(@players, player)

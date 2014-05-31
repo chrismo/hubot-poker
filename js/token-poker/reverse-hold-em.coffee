@@ -12,6 +12,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     @round ||= new Rounds.TimedRound(2)
     @playState = 'play'
     @pot = new Pot(1)
+    @betDuration = 1 # minute
 
   diagnostic: ->
     "\nReverseHoldEm\n\n" +
@@ -29,12 +30,25 @@ module.exports = class ReverseHoldEm extends BaseGame
     null # to indicate no reply is necessary, the board will be pushed
 
   bet: (playerName, bet) ->
+    @pot.bet(this.vetPlayerForBetting(playerName), bet)
+    this.pushBoard()
+    null
+
+  fold: (playerName) ->
+    @pot.fold(this.vetPlayerForBetting(playerName))
+    this.pushBoard()
+    null
+
+  call: (playerName) ->
+    @pot.call(this.vetPlayerForBetting(playerName))
+    this.pushBoard()
+    null
+
+  vetPlayerForBetting: (playerName) ->
     throw "No bets yet." unless @playState == 'bet'
     player = this.getPlayerFromStore(playerName)
     throw "Can't bet if you haven't played." unless player && @boardStore[playerName]
-    if bet == 'fold' then @pot.fold(player) else @pot.bet(player, bet)
-    this.pushBoard()
-    null
+    return player;
 
   fundPlayer: (playerName, amount) ->
     player = this.getPlayerFromStore(playerName)
@@ -66,6 +80,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     super
     @boardStore = @store.boardStore = {}
     @holeDigits = [this.randomDigit(), this.randomDigit()]
+    this.pushStatus("1 point ante.")
 
   # TODO: possibly could push just time remaining instead of the whole board.
   # Would be good to investigate underscore functions like throttle.
@@ -76,6 +91,9 @@ module.exports = class ReverseHoldEm extends BaseGame
   startBetting: ->
     @playState = 'bet'
     this.pushStatus("Hands are locked. Time to bet. Type 'bet' and a number.")
+    this.pushStatus("Type 'call' to stay in by matching highest bet.")
+    this.pushStatus("Type 'fold' to fold and forfeit anything bet already.")
+    this.pushStatus("* Doing nothing will auto-call and match highest bet! *")
 
   finishRound: ->
     @round.end()
@@ -100,25 +118,33 @@ module.exports = class ReverseHoldEm extends BaseGame
 
   showBoard: ->
     # TODO: trim player name
-    # TODO: push up hole on the same line. have width to spare.
     width = 56
-    title = "Reverse Hold 'em"
     remaining = @round.minutesLeft()
-    remainingText = switch
-      when (remaining >= 1) then "#{remaining} min"
-      else
-        "..."
+    remaining = remaining - @betDuration if @playState == 'play'
+    remainingText = if (remaining >= 1) then "#{remaining} min" else "soon"
+
+    holeDigits = if @round.isOver() then @holeDigits.join(' ') else 'X X'
+    title = "Reverse Hold 'em       Hole: #{holeDigits}"
+
     status = if @round.isOver()
       "Winner: #{@winningHandResult.playerName}".rjust(width - title.length)
     else
       action = if @playState == 'play' then 'Bet' else 'Flop'
       # TODO: Time to bet shows total time, not total minus 1
       "Time to #{action}: #{remainingText}".rjust(width - title.length)
-    holeDigits = if @round.isOver() then @holeDigits.join(' ') else 'X X'
+
+    inst = if @playState == 'bet'
+      'bet [xx] | call | fold  ||  ** auto-call in effect **'
+    else
+      ''
+
     header = [
       "#{title}#{status}",
-      "Hole: #{holeDigits}".center(width),
-      '', '']
+      inst.center(width),
+      "                                                 POT/ALL",
+      ''
+    ]
+
     hands = (this.formatHandResult handResult, width for handResult in this.handsInWinningOrder())
     header.join('\n') + hands.join('\n')
 

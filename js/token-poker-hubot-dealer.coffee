@@ -48,6 +48,24 @@ module.exports = (robot) ->
     catch error
       msg.send error
 
+  robot.hear /^fold$/i, (msg) ->
+    try
+      amount = msg.match[1]
+      dealer = currentDealer(msg)
+      result = dealer.fold(msg.message.user.name)
+      msg.reply result.toStatus() if result
+    catch error
+      msg.send error
+
+  robot.hear /^call$/i, (msg) ->
+    try
+      amount = msg.match[1]
+      dealer = currentDealer(msg)
+      result = dealer.call(msg.message.user.name)
+      msg.reply result.toStatus() if result
+    catch error
+      msg.send error
+
   robot.hear /^poker list games/i, (msg) ->
     try
       msg.send currentDealer(msg).listGames().join("\n")

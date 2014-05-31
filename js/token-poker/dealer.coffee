@@ -37,8 +37,15 @@ module.exports = class Dealer
     this.startNewGame() if not @game
     @game.play(player, playerHand)
 
+  # pass-through stuff sorta smelly?
   bet: (player, bet) ->
     @game.bet(player, bet) if @game
+
+  call: (player) ->
+    @game.call(player) if @game
+
+  fold: (player) ->
+    @game.fold(player) if @game
 
   fundPlayer: (playerName, amount) ->
     @game.fundPlayer(playerName, amount) if @game and @game.fundPlayer
