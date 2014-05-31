@@ -26,7 +26,7 @@ describe 'ReverseHoldEm', ->
     time.now = builder.withMinute(1).build()
     time.execCallback()
 
-    expect(game.playState).toBe 'bet'
+    expect(game.playState.currentState()).toBe 'bet'
 
     expect(-> game.bet('woodall', '10')).toThrow "Can't bet if you haven't played."
     # TODO: ok - bet and fold can be done same time, but then bet has to be disabled
@@ -51,7 +51,7 @@ describe 'ReverseHoldEm', ->
     expect(game.playerStore[3].name).toBe 'glv'
     expect(game.playerStore[3].points).toBe 25-1-12
 
-    expect(game.playState).toBe 'play'
+    expect(game.playState.currentState()).toBe 'play'
 
   it 'should show board during play', ->
     game.play('chrismo', '112234')
@@ -123,7 +123,7 @@ describe 'ReverseHoldEm', ->
 
   it 'should allow direct funding to a player', ->
     game.play('chrismo', '112357')
-    game.playState = 'bet'
+    game.playState.switch('startBetting')
     game.bet('chrismo', '20')
     expect(game.playerStore[0].points).toBe 25-1-20
     game.fundPlayer('chrismo', '30')

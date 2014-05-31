@@ -6,6 +6,7 @@
 
   "dependencies": {
     "coffee-script": ">= 1.7.1",
+    "skinny-coffee-machine": ">= 0.2.1",
     "jasmine-node": ">= 1.14.0",
     "underscore": "1.6.0"
   },
