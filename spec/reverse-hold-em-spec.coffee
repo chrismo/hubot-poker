@@ -45,15 +45,19 @@ describe 'ReverseHoldEm', ->
     expect(game.winningHandResult.playerName).toBe 'romer'
     expect(game.winningHandResult.hand.name).toBe 'Full House'
     expect(game.playerStore[0].name).toBe 'chrismo'
-    expect(game.playerStore[0].points).toBe 25-1-12
+    expect(game.playerStore[0].points).toBe 25 - 1 - 12
     expect(game.playerStore[1].name).toBe 'romer'
-    expect(game.playerStore[1].points).toBe 25-1-12+(1+1+1+1+1)+(12+12+12+3)
+    expect(game.playerStore[1].points).toBe 25 - 1 - 12 + (1 + 1 + 1 + 1 + 1) + (12 + 12 + 12 + 3)
     expect(game.playerStore[2].name).toBe 'sara'
-    expect(game.playerStore[2].points).toBe 25-1
+    expect(game.playerStore[2].points).toBe 25 - 1
     expect(game.playerStore[3].name).toBe 'glv'
-    expect(game.playerStore[3].points).toBe 25-1-12
+    expect(game.playerStore[3].points).toBe 25 - 1 - 12
     expect(game.playerStore[4].name).toBe 'bogdan'
-    expect(game.playerStore[4].points).toBe 25-1-3
+    expect(game.playerStore[4].points).toBe 25 - 1 - 3
+
+    # folded players should be removed from board
+    expect(game.boardStore.sara).toBe undefined
+    expect(game.boardStore.bogdan).toBe undefined
 
     expect(game.playState.name).toBe 'play'
 
@@ -122,15 +126,15 @@ describe 'ReverseHoldEm', ->
     game.play('chrismo', '112357')
     game.startBetting()
     expect(listener.msgs[0]).toBe "1 point ante."
-    expect(listener.msgs[2]).toBe "Hands are locked. Time to bet. Type 'bet' and a number."
     # not going to expect the remaining instructions - this test is
     # more for the push at all, not the content itself.
+    expect(listener.msgs[2]).toBe "Hands are locked. Time to bet. Type 'bet' and a number."
 
   it 'should allow direct funding to a player', ->
     game.play('chrismo', '112357')
     game.startBetting()
     game.bet('chrismo', '20')
-    expect(game.playerStore[0].points).toBe 25-1-20
+    expect(game.playerStore[0].points).toBe 25 - 1 - 20
     game.fundPlayer('chrismo', '30')
     expect(game.playerStore[0].points).toBe 30
 

@@ -38,7 +38,9 @@ module.exports = class ReverseHoldEm extends BaseGame
     null
 
   fold: (playerName) ->
-    @pot.fold(this.vetPlayerForBetting(playerName, 'fold'))
+    player = this.vetPlayerForBetting(playerName, 'fold')
+    @pot.fold(player)
+    delete @boardStore[player.name]
     this.pushBoard()
     null
 

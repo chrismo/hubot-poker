@@ -96,6 +96,7 @@ module.exports = (robot) ->
         gameName = terms[1]
         msg.send dealer.adminChangeGame(msg.message.user.name, gameName)
       if /^fund/.test(command)
+        # TODO: most player names are 'first last'
         playerName = terms[1]
         amount = parseInt(terms[2])
         msg.send "setting #{playerName} points to #{amount}"
