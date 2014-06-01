@@ -10,6 +10,9 @@
 # Commands:
 #   <any 6 digits> - Play a hand of token poker
 #   bet <digits>   - Bet points in token poker
+#   call           - Match highest bet to stay in game
+#   fold           - Fold current hand and forfeit any points bet
+#   poker diag - Diagnostic dump of current state
 #   poker status|board|score - Display the current status, board or score (game dependent).
 #   poker list games - Show the current list of available games.
 #   poker admin [command] - Various admin commands.
@@ -101,6 +104,14 @@ module.exports = (robot) ->
         amount = parseInt(terms[2])
         msg.send "setting #{playerName} points to #{amount}"
         msg.send dealer.fundPlayer(playerName, amount)
+      if /^ai/.test(command)
+        action = terms[1]
+        playerName = terms[2]
+        switch
+          when action == 'add'
+            dealer.addAi(playerName)
+          when action == 'kill'
+            dealer.killAi(playerName)
     catch error
       msg.send error
 

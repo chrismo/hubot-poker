@@ -79,6 +79,20 @@ describe 'Dealer', ->
     res = dealer.fundPlayer('chrismo', '12')
     expect(res).toBe "chrismo funded 12"
 
+  it 'should manage ai players', ->
+    dealer.startNewGame()
+    dealer.addAi('foo')
+    dealer.addAi('bar')
+    expect(dealer.ais.length).toBe 2
+    expect(dealer.ais[0].name).toBe 'foo'
+    expect(dealer.ais[1].name).toBe 'bar'
+    dealer.killAi('bar')
+    expect(dealer.ais.length).toBe 1
+    expect(dealer.ais[0].name).toBe 'foo'
+    dealer.killAi('foo')
+    expect(dealer.ais.length).toBe 0
+
+
 class KillEmAll extends BaseGame
   constructor: ->
     @round = new Rounds.TimedRound(1)

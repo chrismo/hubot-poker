@@ -1,3 +1,4 @@
+AiPlayer = require('./ai-player')
 Stockpile = require('./stockpile')
 ReverseHoldEm = require('./reverse-hold-em')
 _ = require('underscore')
@@ -9,6 +10,7 @@ module.exports = class Dealer
     @dealerStore = @store.tokenPoker[@id] ||= {}
     @gameClasses ||= [ReverseHoldEm, Stockpile]
     @currentGameClass = @gameClasses[0]
+    @ais = []
 
   diagnostic: ->
     ["@gameClasses: #{(gameClass.name for gameClass in @gameClasses).join(',')}",
@@ -49,6 +51,17 @@ module.exports = class Dealer
 
   fundPlayer: (playerName, amount) ->
     @game.fundPlayer(playerName, amount) if @game and @game.fundPlayer
+
+  addAi: (playerName) ->
+    ai = new AiPlayer(playerName, @game)
+    ai.doSomething()
+    @ais.push ai
+
+  killAi: (playerName) ->
+    ai = _.find(@ais, (ai) -> (ai.name == playerName))
+    if ai
+      ai.die()
+      @ais = _.without(@ais, ai)
 
   getStatus: ->
     this.startNewGame() if not @game
