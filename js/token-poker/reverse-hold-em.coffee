@@ -16,6 +16,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     # there's a more elegant way to string these together, i can feel it
     @betDuration = 1 # minute
     @settleDuration = 0.5 # minute
+    @timeouts = []
 
   diagnostic: ->
     "\nReverseHoldEm\n\n" +
@@ -41,8 +42,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     player = this.vetPlayerForBetting(playerName, 'fold')
     @pot.fold(player)
     @boardStore[player.name].folded = true
-    this.pushBoard()
-    this.checkForLoneWinner()
+    this.pushBoard() unless this.checkForLoneWinner()
     null
 
   call: (playerName) ->
@@ -58,7 +58,11 @@ module.exports = class ReverseHoldEm extends BaseGame
 
   checkForLoneWinner: ->
     unfoldedHandResults = (handResult for handResult in this.handsInWinningOrder() when handResult.folded == false)
-    this.finishRound() if unfoldedHandResults.length == 1
+    if unfoldedHandResults.length == 1
+      this.finishRound()
+      true
+    else
+      false
 
   fundPlayer: (playerName, amount) ->
     player = this.getPlayerFromStore(playerName)
@@ -93,9 +97,9 @@ module.exports = class ReverseHoldEm extends BaseGame
     this.pushStatus("1 point ante.")
 
   setAlarms: ->
-    @round.setAlarm(@betDuration + @settleDuration, this, this.startBetting)
-    @round.setAlarm(@settleDuration, this, this.settleUp)
-    @round.setAlarm(0, this, this.finishRound)
+    @timeouts.push @round.setAlarm(@betDuration + @settleDuration, this, this.startBetting)
+    @timeouts.push @round.setAlarm(@settleDuration, this, this.settleUp)
+    @timeouts.push @round.setAlarm(0, this, this.finishRound)
 
   startBetting: ->
     @playState = new BetPlayState(this)
@@ -107,7 +111,12 @@ module.exports = class ReverseHoldEm extends BaseGame
     @pot.settleUp()
     @pot.goesTo(@winningHandResult.player) if @winningHandResult
     this.pushStatus(this.showBoard())
+    this.clearTimeouts()
     @playState = new HandsPlayState(this)
+
+  clearTimeouts: ->
+    clearTimeout timeout for timeout in @timeouts
+    @timeouts = []
 
   settleUp: ->
     @playState = new SettlePlayState(this)
