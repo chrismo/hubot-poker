@@ -25,6 +25,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     (if @round.diagnostic then @round.diagnostic() else '') +
     (if @pot.diagnostic then @pot.diagnostic() else '')
 
+  # TODO: BUG - if a player is out of points, but they are one of first 2 players, crazyness ensues
   play: (playerName, playerHand) ->
     @playState.vetAction('play')
     this.ensureRoundStarted()
@@ -221,6 +222,8 @@ class BetPlayState
 class SettlePlayState
   constructor: (@game) ->
     @name = 'settle'
+    # TODO: campfire screws up the ordering - pushing all at once will have 'paste' style formatting (bad?)
+    # - so either push as a paragraph or add some sleeps to it.
     @game.pushStatus("No new bets. Time to settle up. ")
     @game.pushStatus("Type 'call' to match the highest bid and stay in.")
     @game.pushStatus("Type 'fold' to fold and forfeit anything bet already.")
