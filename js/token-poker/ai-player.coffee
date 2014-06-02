@@ -4,12 +4,12 @@ _ = require('underscore')
 # everything to do with needing to simulate multiple
 # players in the hubot Shell adapter for exploratory testing.
 module.exports = class AiPlayer
-  constructor: (@name, @game) ->
+  constructor: (@name, @dealer) ->
     @functions = []
-    @functions.push (-> (@game.play(@name, this.randomHand()))) if @game.play
-    @functions.push (-> (@game.bet(@name, (Math.floor(Math.random() * 5))))) if @game.bet
-    @functions.push (-> (@game.fold(@name))) if @game.fold
-    @functions.push (-> (@game.call(@name))) if @game.call
+    @functions.push (-> (@dealer.play(@name, this.randomHand()))) if @dealer.game.play
+    @functions.push (-> (@dealer.bet(@name, (Math.floor(Math.random() * 5))))) if @dealer.game.bet
+    @functions.push (-> (@dealer.fold(@name))) if @dealer.game.fold
+    @functions.push (-> (@dealer.call(@name))) if @dealer.game.call
 
     @alive = true
     @limit = 20
@@ -29,7 +29,7 @@ module.exports = class AiPlayer
     try
       @functions[index].call(this)
     catch error
-      @game.pushStatus(error)
+      @dealer.onStatus(error)
     finally
       seconds = (Math.random() * 15) + 15
       that = this

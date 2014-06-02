@@ -22,10 +22,6 @@ describe 'Dealer', ->
     game = dealer.startNewGame()
     expect(game.constructor.name).toBe 'KillEmAll'
 
-  it 'should play a hand to the current game', ->
-    result = dealer.play('chrismo', '123123')
-    expect(result).toBe 'chrismo played 123123'
-
   it 'should return status of current game', ->
     result = dealer.getStatus()
     expect(result).toBe "game status"
@@ -45,16 +41,21 @@ describe 'Dealer', ->
         'loser')).toThrow 'foobar is not an Admin. Only admins can change the game.'
 
   it 'should finishRound on the current game if new game is different', ->
+    listener = new FakeListener
+    dealer.setListener(listener)
     dealer.play('chrismo', '123123')
+    dealer.play('romer', '123123')
     firstGame = dealer.game
     expect(firstGame.round.isStarted()).toBe true
 
     dealer.adminChangeGame('chrismo', 'loser')
     expect(dealer.game.constructor.name).toBe 'LoserWins'
     expect(firstGame.round.isOver()).toBe true
+    expect(listener.finishRound).toBe true
 
   it 'should do nothing if the requested game is already in play', ->
     dealer.play('chrismo', '123123')
+    dealer.play('romer', '123123')
     firstGame = dealer.game
     expect(firstGame.round.isStarted()).toBe true
 
@@ -92,6 +93,16 @@ describe 'Dealer', ->
     dealer.killAi('foo')
     expect(dealer.ais.length).toBe 0
 
+  it 'should hold first player plays on a new round until second player', ->
+    result = dealer.play('romer', '243243')
+    expect(result).toBe 'Need a second player to start the next round.'
+    result = dealer.play('romer', '555666')
+    expect(result).toBe 'Need a second player to start the next round.'
+    result = dealer.play('chrismo', '123123')
+    expect(result.join("\n")).toBe 'romer played 243243\nromer played 555666\nchrismo played 123123'
+    result = dealer.play('sara', '343434')
+    expect(result).toBe "sara played 343434"
+
 
 class KillEmAll extends BaseGame
   constructor: ->
@@ -116,3 +127,5 @@ class LoserWins extends BaseGame
 
 class FakeListener
   onStatus: (@lastStatus) ->
+  onFinishRound: ->
+    @finishRound = true

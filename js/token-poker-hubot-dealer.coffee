@@ -38,7 +38,7 @@ module.exports = (robot) ->
     try
       dealer = currentDealer(msg)
       result = dealer.play(msg.message.user.name, msg.message.text)
-      msg.reply result.toStatus() if result
+      handleReply(msg, result)
     catch error
       msg.send error
 
@@ -47,7 +47,7 @@ module.exports = (robot) ->
       amount = msg.match[1]
       dealer = currentDealer(msg)
       result = dealer.bet(msg.message.user.name, amount)
-      msg.reply result.toStatus() if result
+      handleReply(msg, result)
     catch error
       msg.send error
 
@@ -56,7 +56,7 @@ module.exports = (robot) ->
       amount = msg.match[1]
       dealer = currentDealer(msg)
       result = dealer.fold(msg.message.user.name)
-      msg.reply result.toStatus() if result
+      handleReply(msg, result)
     catch error
       msg.send error
 
@@ -65,7 +65,7 @@ module.exports = (robot) ->
       amount = msg.match[1]
       dealer = currentDealer(msg)
       result = dealer.call(msg.message.user.name)
-      msg.reply result.toStatus() if result
+      handleReply(msg, result)
     catch error
       msg.send error
 
@@ -114,6 +114,10 @@ module.exports = (robot) ->
             dealer.killAi(playerName)
     catch error
       msg.send error
+
+  handleReply = (msg, result) ->
+    if result
+      msg.reply if result.toStatus then result.toStatus() else result
 
   currentRoom = (msg) ->
     '' + msg.message.user.room

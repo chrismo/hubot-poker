@@ -10,6 +10,7 @@ module.exports = class Dealer
     @dealerStore = @store.tokenPoker[@id] ||= {}
     @gameClasses ||= [ReverseHoldEm, Stockpile]
     @currentGameClass = @gameClasses[0]
+    @playCache = []
     @ais = []
 
   diagnostic: ->
@@ -37,7 +38,22 @@ module.exports = class Dealer
 
   play: (player, playerHand) ->
     this.startNewGame() if not @game
-    @game.play(player, playerHand)
+    if !@game.round.isStarted()
+      @playCache.push {player: player, playerHand: playerHand}
+      if this.playersInPlayCache() > 1
+        results = []
+        while @playCache.length > 0
+          thisPlay = @playCache.shift()
+          results.push @game.play(thisPlay.player, thisPlay.playerHand)
+        results
+      else
+        "Need a second player to start the next round."
+    else
+      @game.play(player, playerHand)
+
+  playersInPlayCache: ->
+    players = (play.player for play in @playCache)
+    _.uniq(players).length
 
   # pass-through stuff sorta smelly?
   bet: (player, bet) ->
@@ -53,8 +69,8 @@ module.exports = class Dealer
     @game.fundPlayer(playerName, amount) if @game and @game.fundPlayer
 
   addAi: (playerName) ->
-    ai = new AiPlayer(playerName, @game)
-    ai.doSomething()
+    ai = new AiPlayer(playerName, this)
+    ai.doSomething(0)
     @ais.push ai
 
   killAi: (playerName) ->
@@ -69,6 +85,9 @@ module.exports = class Dealer
 
   onStatus: (status) ->
     @listener.onStatus(status) if @listener
+
+  onFinishRound: ->
+    @listener.onFinishRound() if @listener
 
   # TODO: allow anyone to change game if a current game is not active
   adminChangeGame: (name, newGameName) ->

@@ -122,3 +122,4 @@ describe 'Stockpile', ->
 
 class FakeListener
   onStatus: (@scoreboardText) ->
+  onFinishRound: ->

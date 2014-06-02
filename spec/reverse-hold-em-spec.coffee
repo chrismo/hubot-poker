@@ -149,6 +149,19 @@ describe 'ReverseHoldEm', ->
     game.finishRound()
     expect(game.winningHandResult.playerName).toBe 'romer'
 
+  it 'should not allow a folded player to call', ->
+    # it doesn't but it's a thrown err out of the pot
+    # which is a little confusing to display there, but
+    # it doesn't cause any problems.
+
+  it 'should not show folded player amount in pot after win', ->
+    # the player is not in the pot to have their totalBet
+    # value reset to 0. So ... maybe the POT needs to track
+    # folded players, instead of the game?
+
+  it 'should declare a winner if everyone but one player folds', ->
+    expect(true).toBe false
+
 
 class FakeListener
   constructor: ->

@@ -2,51 +2,51 @@ _ = require('underscore')
 AiPlayer = require('../js/token-poker/ai-player')
 
 describe 'AiPlayer', ->
-  game = null
+  dealer = null
 
   beforeEach ->
-    game = new FakeGame
+    dealer = new FakeDealer
 
   it 'plays rest of game at random when added to it', ->
-    ai = new AiPlayer('foo', game)
+    ai = new AiPlayer('foo', dealer)
     ai.doSomething(0)
-    expect(game.playPlayerName).toBe 'foo'
-    expect(game.playHand).toNotBe 'undefined'
-    expect(game.playHand.length).toBe 6
+    expect(dealer.playPlayerName).toBe 'foo'
+    expect(dealer.playHand).toNotBe 'undefined'
+    expect(dealer.playHand.length).toBe 6
 
     ai.doSomething(1)
-    expect(game.betPlayerName).toBe 'foo'
-    expect(game.betAmount).toNotBe 'undefined'
-    expect(game.betAmount).toBeLessThan 5
+    expect(dealer.betPlayerName).toBe 'foo'
+    expect(dealer.betAmount).toNotBe 'undefined'
+    expect(dealer.betAmount).toBeLessThan 5
 
     ai.doSomething(2)
-    expect(game.foldPlayerName).toBe 'foo'
+    expect(dealer.foldPlayerName).toBe 'foo'
 
     ai.doSomething(3)
-    expect(game.callPlayerName).toBe 'foo'
+    expect(dealer.callPlayerName).toBe 'foo'
 
   it 'calls things at random when not fed a function index', ->
-    game = new FakeAllIsOne
-    ai = new AiPlayer('bar', game)
+    dealer = new FakeAllIsOne
+    ai = new AiPlayer('bar', dealer)
     _.times(20, ->
       ai.doSomething()
-      expect(game.playerName).toBe 'bar'
-      game.playerName = undefined
+      expect(dealer.playerName).toBe 'bar'
+      dealer.playerName = undefined
     )
 
   it 'dies when killed', ->
-    game = new FakeAllIsOne
-    ai = new AiPlayer('bar', game)
+    dealer = new FakeAllIsOne
+    ai = new AiPlayer('bar', dealer)
     ai.doSomething()
-    expect(game.playerName).toBe 'bar'
-    game.playerName = undefined
+    expect(dealer.playerName).toBe 'bar'
+    dealer.playerName = undefined
     ai.die()
     ai.doSomething()
-    expect(game.playerName).toBe undefined
+    expect(dealer.playerName).toBe undefined
 
   it 'stops acting after a limit', ->
-    game = new FakeAllIsOne
-    ai = new AiPlayer('bar', game)
+    dealer = new FakeAllIsOne
+    ai = new AiPlayer('bar', dealer)
     _.times(20, ->
       ai.doSomething()
       expect(ai.alive).toBe true
@@ -55,15 +55,19 @@ describe 'AiPlayer', ->
     expect(ai.alive).toBe false
 
   it 'only calls method that game has', ->
-    game = new LimitedGame
-    ai = new AiPlayer('bar', game)
+    dealer = new FakeDealer
+    dealer.game = new LimitedGame
+    ai = new AiPlayer('bar', dealer)
     _.times(20, ->
       ai.doSomething()
       expect(ai.alive).toBe true
     )
 
 
-class FakeGame
+class FakeDealer
+  constructor: ->
+    @game = new FakeGame
+
   play: (@playPlayerName, @playHand) ->
 
   bet: (@betPlayerName, @betAmount) ->
@@ -74,6 +78,9 @@ class FakeGame
 
 
 class FakeAllIsOne
+  constructor: ->
+    @game = new FakeGame
+
   play: (@playerName) ->
 
   bet: (@playerName) ->
@@ -81,6 +88,15 @@ class FakeAllIsOne
   fold: (@playerName) ->
 
   call: (@playerName) ->
+
+class FakeGame
+  play: (@playPlayerName, @playHand) ->
+
+  bet: (@betPlayerName, @betAmount) ->
+
+  fold: (@foldPlayerName) ->
+
+  call: (@callPlayerName) ->
 
 class LimitedGame
   play: (@playerName) ->

@@ -118,7 +118,6 @@ module.exports = class ReverseHoldEm extends BaseGame
       handResult
     handResults.sort (a, b) ->
       if a.folded != b.folded
-        console.log("a.folded != b.folded")
         a.foldedAsSortInt() - b.foldedAsSortInt()
       else
         a.hand.matchCount - b.hand.matchCount
@@ -165,9 +164,7 @@ class HandResult
     @playerHand = @playerHand.replace(/\s+/g, '').replace(/\d\d\d/, "$& ")
 
   foldedAsSortInt: ->
-    result = if @folded then 1 else 0
-    console.log("result: #{result}")
-    result
+    if @folded then 1 else 0
 
 
 class HandsPlayState

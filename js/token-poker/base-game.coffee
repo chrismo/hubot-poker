@@ -28,6 +28,7 @@ module.exports = class BaseGame
     @winner = undefined
 
   finishRound: ->
+    @listener.onFinishRound() if @listener
     @round.end()
 
   randomDigit: ->
