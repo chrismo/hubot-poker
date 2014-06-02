@@ -42,6 +42,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     @pot.fold(player)
     @boardStore[player.name].folded = true
     this.pushBoard()
+    this.checkForLoneWinner()
     null
 
   call: (playerName) ->
@@ -54,6 +55,10 @@ module.exports = class ReverseHoldEm extends BaseGame
     player = this.getPlayerFromStore(playerName)
     throw "Can't bet if you haven't played." unless player && @boardStore[playerName]
     return player
+
+  checkForLoneWinner: ->
+    unfoldedHandResults = (handResult for handResult in this.handsInWinningOrder() when handResult.folded == false)
+    this.finishRound() if unfoldedHandResults.length == 1
 
   fundPlayer: (playerName, amount) ->
     player = this.getPlayerFromStore(playerName)

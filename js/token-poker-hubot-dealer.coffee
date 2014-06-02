@@ -117,8 +117,8 @@ module.exports = (robot) ->
       msg.send error
 
   handleReply = (msg, result) ->
-    if result
-      for result in _.flatten([result])
+    for result in _.flatten([result])
+      if result
         msg.reply if result.toStatus then result.toStatus() else result
 
   currentRoom = (msg) ->

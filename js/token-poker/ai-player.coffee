@@ -28,8 +28,8 @@ module.exports = class AiPlayer
     index = (Math.floor(Math.random() * @functions.length)) if index == undefined
     try
       result = @functions[index].call(this)
-      if result
-        for result in _.flatten([result])
+      for result in _.flatten([result])
+        if result
           @dealer.onStatus(if result.toStatus then result.toStatus() else result)
     catch error
       @dealer.onStatus(error)

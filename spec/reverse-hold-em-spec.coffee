@@ -138,6 +138,7 @@ describe 'ReverseHoldEm', ->
     game.fundPlayer('chrismo', '30')
     expect(game.playerStore[0].points).toBe 30
 
+  it 'should declare a winner if everyone but one player folds'
   it 'should not allow a folded player to win', ->
     game.play('chrismo', '123456')
     game.play('romer', '112357')
@@ -146,7 +147,6 @@ describe 'ReverseHoldEm', ->
     expect(game.boardStore.chrismo.folded).toBe false
     game.fold('chrismo')
     expect(game.boardStore.chrismo.folded).toBe true
-    game.finishRound()
     expect(game.winningHandResult.playerName).toBe 'romer'
 
   it 'should not allow a folded player to call', ->
@@ -159,8 +159,7 @@ describe 'ReverseHoldEm', ->
     # value reset to 0. So ... maybe the POT needs to track
     # folded players, instead of the game?
 
-  it 'should declare a winner if everyone but one player folds', ->
-    expect(true).toBe false
+
 
 
 class FakeListener
