@@ -95,19 +95,18 @@ module.exports = (robot) ->
     try
       dealer = currentDealer(msg)
       terms = msg.match[1].split(' ')
-      command = terms[0]
+      command = terms.shift()
       if /^play/.test(command)
-        gameName = terms[1]
+        gameName = terms.shift()
         msg.send dealer.adminChangeGame(msg.message.user.name, gameName)
       if /^fund/.test(command)
-        # TODO: most player names are 'first last'
-        playerName = terms[1]
-        amount = parseInt(terms[2])
+        amount = parseInt(terms.shift())
+        playerName = terms.join(' ')
         msg.send "setting #{playerName} points to #{amount}"
         msg.send dealer.fundPlayer(playerName, amount)
       if /^ai/.test(command)
-        action = terms[1]
-        playerName = terms[2]
+        action = terms.shift()
+        playerName = terms.join(' ')
         switch
           when action == 'add'
             dealer.addAi(playerName)

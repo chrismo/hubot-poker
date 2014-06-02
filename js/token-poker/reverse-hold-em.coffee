@@ -71,7 +71,7 @@ module.exports = class ReverseHoldEm extends BaseGame
   ensurePlayerInStore: (playerName) ->
     player = this.getPlayerFromStore(playerName)
     unless player
-      player = new Player(playerName, 25)
+      player = new Player(playerName, 100)
       @playerStore.push(player)
 
     # always add player to pot - call is idempotent
