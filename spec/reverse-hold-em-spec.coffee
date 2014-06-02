@@ -55,9 +55,9 @@ describe 'ReverseHoldEm', ->
     expect(game.playerStore[4].name).toBe 'bogdan'
     expect(game.playerStore[4].points).toBe 25 - 1 - 3
 
-    # folded players should be removed from board
-    expect(game.boardStore.sara).toBe undefined
-    expect(game.boardStore.bogdan).toBe undefined
+    # folded players should be marked
+    expect(game.boardStore.sara.folded).toBe true
+    expect(game.boardStore.bogdan.folded).toBe true
 
     expect(game.playState.name).toBe 'play'
 
@@ -137,6 +137,17 @@ describe 'ReverseHoldEm', ->
     expect(game.playerStore[0].points).toBe 25 - 1 - 20
     game.fundPlayer('chrismo', '30')
     expect(game.playerStore[0].points).toBe 30
+
+  it 'should not allow a folded player to win', ->
+    game.play('chrismo', '123456')
+    game.play('romer', '112357')
+    game.startBetting()
+    expect(game.boardStore.romer.folded).toBe false
+    expect(game.boardStore.chrismo.folded).toBe false
+    game.fold('chrismo')
+    expect(game.boardStore.chrismo.folded).toBe true
+    game.finishRound()
+    expect(game.winningHandResult.playerName).toBe 'romer'
 
 
 class FakeListener

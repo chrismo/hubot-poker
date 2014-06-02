@@ -58,7 +58,7 @@ module.exports = class Stockpile extends BaseGame
       else
         ["Time Left: #{@round.minutesLeft()} minutes", '']
 
-    # TODO: make a class for scoruple
+    # TODO: re-use Player class for scoruple
     for scoruple in this.scoresInWinningOrder()
       s.push "#{scoruple[0]}: #{scoruple[1]}"
     s = header.concat(if s.length == 0 then ['[NO SCORES YET]'] else s)

@@ -40,7 +40,7 @@ module.exports = class ReverseHoldEm extends BaseGame
   fold: (playerName) ->
     player = this.vetPlayerForBetting(playerName, 'fold')
     @pot.fold(player)
-    delete @boardStore[player.name]
+    @boardStore[player.name].folded = true
     this.pushBoard()
     null
 
@@ -117,10 +117,13 @@ module.exports = class ReverseHoldEm extends BaseGame
     handResults = for playerName, handResult of @boardStore
       handResult
     handResults.sort (a, b) ->
-      a.hand.matchCount - b.hand.matchCount
+      if a.folded != b.folded
+        console.log("a.folded != b.folded")
+        a.foldedAsSortInt() - b.foldedAsSortInt()
+      else
+        a.hand.matchCount - b.hand.matchCount
 
   showBoard: ->
-    # TODO: trim player name
     width = 56
     remaining = @playState.remainingMinutes()
     remainingText = if (remaining >= 1) then "#{remaining} min" else "soon"
@@ -145,7 +148,8 @@ module.exports = class ReverseHoldEm extends BaseGame
     header.join('\n') + hands.join('\n')
 
   formatHandResult: (handResult, width) ->
-    left = "#{handResult.playerName.ljust(20)} #{handResult.playerHand}  #{handResult.hand.name}"
+    handDisplay = if handResult.folded then '* FOLDED *' else handResult.hand.name
+    left = "#{handResult.playerName.substr(0, 20).ljust(20)} #{handResult.playerHand}  #{handDisplay}"
     right = "#{(handResult.player.totalBet + '').rjust(3)} / #{(handResult.player.points + '').rjust(3)}"
     right = right.rjust(width - left.length)
     "#{left}#{right}"
@@ -156,8 +160,14 @@ module.exports = class ReverseHoldEm extends BaseGame
 
 class HandResult
   constructor: (@player, @playerHand, @hand) ->
+    @folded = false
     @playerName = @player.name
     @playerHand = @playerHand.replace(/\s+/g, '').replace(/\d\d\d/, "$& ")
+
+  foldedAsSortInt: ->
+    result = if @folded then 1 else 0
+    console.log("result: #{result}")
+    result
 
 
 class HandsPlayState
@@ -195,6 +205,7 @@ class BetPlayState
   vetAction: (action, betAction) ->
     throw "Hands are locked" if action == 'play'
     throw "You can't call yet." if betAction == 'call'
+
 
 class SettlePlayState
   constructor: (@game) ->
