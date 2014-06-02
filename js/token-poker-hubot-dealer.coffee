@@ -21,6 +21,7 @@
 #   chrismo
 #   glv
 
+_ = require('underscore')
 Rooms = require('./token-poker/rooms')
 Dealer = require('./token-poker/dealer')
 
@@ -117,7 +118,8 @@ module.exports = (robot) ->
 
   handleReply = (msg, result) ->
     if result
-      msg.reply if result.toStatus then result.toStatus() else result
+      for result in _.flatten([result])
+        msg.reply if result.toStatus then result.toStatus() else result
 
   currentRoom = (msg) ->
     '' + msg.message.user.room

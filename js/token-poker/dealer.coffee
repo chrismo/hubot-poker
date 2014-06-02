@@ -16,6 +16,7 @@ module.exports = class Dealer
   diagnostic: ->
     ["@gameClasses: #{(gameClass.name for gameClass in @gameClasses).join(',')}",
      "@id: #{@id}",
+     "@playCache: #{@playCache}",
      (if (@game && @game.diagnostic) then @game.diagnostic() else '')].join("\n")
 
   listGames: ->
