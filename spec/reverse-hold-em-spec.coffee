@@ -11,7 +11,7 @@ describe 'ReverseHoldEm', ->
     store = {}
     builder = new Fakes.TimeBuilder().withHour(1).withMinute(0).withSecond(0)
     time = new Fakes.FakeTimeProvider(builder.build())
-    round = new Rounds.TimedRound(3, time)
+    round = new Rounds.TimedRound(2, time)
     game = new ReverseHoldEm(store, round)
     game.playerStartingPoints = 25
 
@@ -65,23 +65,23 @@ describe 'ReverseHoldEm', ->
   it 'should show board during play', ->
     game.play('chrismo', '112234')
     expect(game.showBoard()).toBe (
-          "Reverse Hold 'em       Hole: X X         Bet In: 1.5 min\n" +
+          "Reverse Hold 'em       Hole: X X           Bet In: 1 min\n" +
           "                                                        \n" +
           "                                               POT / ALL\n" +
           "chrismo              112 234  Two Pair           1 /  24"
     )
     game.play('romer', ' 555  964')
-    time.now = builder.withMinute(1).withSecond(30).build()
+    time.now = builder.withMinute(1).withSecond(0).build()
     time.execCallback()
     expect(game.showBoard()).toBe (
-          "Reverse Hold 'em       Hole: X X      Settle In: 1.5 min\n" +
+          "Reverse Hold 'em       Hole: X X         Settle In: soon\n" +
           "                    bet [xx] | fold                     \n" +
           "                                               POT / ALL\n" +
           "romer                555 964  Three of a Kind    1 /  24\n" +
           "chrismo              112 234  Two Pair           1 /  24"
     )
     game.holeDigits = ['5', '6']
-    time.now = builder.withMinute(2).withSecond(30).build()
+    time.now = builder.withMinute(1).withSecond(30).build()
     time.execCallback()
     expect(game.showBoard()).toBe (
           "Reverse Hold 'em       Hole: X X          Flop In: 1 min\n" +
@@ -90,7 +90,7 @@ describe 'ReverseHoldEm', ->
           "romer                555 964  Three of a Kind    1 /  24\n" +
           "chrismo              112 234  Two Pair           1 /  24"
     )
-    time.now = builder.withMinute(3).withSecond(0).build()
+    time.now = builder.withMinute(2).withSecond(0).build()
     time.execCallback()
     expect(game.showBoard()).toBe (
           "Reverse Hold 'em       Hole: 5 6           Winner: romer\n" +

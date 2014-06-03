@@ -9,13 +9,13 @@ module.exports = class ReverseHoldEm extends BaseGame
   constructor: (@store, @round) ->
     super(@store, @round)
     @playerStore = @store.playerStore ||= []
-    @round ||= new Rounds.TimedRound(3) # TODO: 2
+    @round ||= new Rounds.TimedRound(2)
     @playState = new HandsPlayState(this)
     @pot = new Pot(1)
     # there's a smell around these durations and the play state classes.
     # there's a more elegant way to string these together, i can feel it
-    @betDuration = 1 # minute # TODO: 0.5
-    @settleDuration = 0.5 # minute
+    @betDuration = 0.5
+    @settleDuration = 0.5
     @timeouts = []
     @playerStartingPoints = 100
 
@@ -101,8 +101,8 @@ module.exports = class ReverseHoldEm extends BaseGame
     @timeouts.push @round.setAlarm(0, this, this.finishRound)
 
   startBetting: ->
-    # TODO: push board to alert players
     @playState = new BetPlayState(this)
+    this.pushBoard()
 
   finishRound: ->
     @round.end()
@@ -186,6 +186,7 @@ class HandsPlayState
     @name = 'play'
 
   remainingMinutes: ->
+    console.log "#{@game.round.minutesLeft()} - #{@game.betDuration} - #{@game.settleDuration}"
     @game.round.minutesLeft() - @game.betDuration - @game.settleDuration
 
   nextStateLabel: ->
@@ -221,8 +222,6 @@ class BetPlayState
 class SettlePlayState
   constructor: (@game) ->
     @name = 'settle'
-    # TODO: campfire screws up the ordering - pushing all at once will have 'paste' style formatting (bad?)
-    # - so either push as a paragraph or add some sleeps to it.
     @game.pushStatus ["No new bets. Time to settle up. ",
                       "Type 'call' to match the highest bid and stay in.",
                       "Type 'fold' to fold and forfeit anything bet already.",
