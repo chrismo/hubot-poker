@@ -13,6 +13,7 @@ describe 'ReverseHoldEm', ->
     time = new Fakes.FakeTimeProvider(builder.build())
     round = new Rounds.TimedRound(3, time)
     game = new ReverseHoldEm(store, round)
+    game.playerStartingPoints = 25
 
   it 'basic gameplay with play, bet and settle rounds', ->
     game.play('chrismo', '112 234')
@@ -128,7 +129,7 @@ describe 'ReverseHoldEm', ->
     expect(listener.msgs[0]).toBe "1 point ante."
     # not going to expect the remaining instructions - this test is
     # more for the push at all, not the content itself.
-    expect(listener.msgs[2]).toBe "Hands are locked. Time to bet. Type 'bet' and a number."
+    expect(listener.msgs[2].substr(0, 30)).toBe "Hands are locked. Time to bet."
 
   it 'should allow direct funding to a player', ->
     game.play('chrismo', '112357')

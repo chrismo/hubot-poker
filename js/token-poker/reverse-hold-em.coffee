@@ -9,14 +9,15 @@ module.exports = class ReverseHoldEm extends BaseGame
   constructor: (@store, @round) ->
     super(@store, @round)
     @playerStore = @store.playerStore ||= []
-    @round ||= new Rounds.TimedRound(3)
+    @round ||= new Rounds.TimedRound(3) # TODO: 2
     @playState = new HandsPlayState(this)
     @pot = new Pot(1)
     # there's a smell around these durations and the play state classes.
     # there's a more elegant way to string these together, i can feel it
-    @betDuration = 1 # minute
+    @betDuration = 1 # minute # TODO: 0.5
     @settleDuration = 0.5 # minute
     @timeouts = []
+    @playerStartingPoints = 100
 
   diagnostic: ->
     "\nReverseHoldEm\n\n" +
@@ -72,7 +73,7 @@ module.exports = class ReverseHoldEm extends BaseGame
   ensurePlayerInStore: (playerName) ->
     player = this.getPlayerFromStore(playerName)
     unless player
-      player = new Player(playerName, 100)
+      player = new Player(playerName, @playerStartingPoints)
       @playerStore.push(player)
 
     # always add player to pot - call is idempotent
@@ -88,9 +89,6 @@ module.exports = class ReverseHoldEm extends BaseGame
   storeHandResult: (handResult) ->
     @boardStore[handResult.playerName] = handResult
 
-  # TODO: don't start until 2 players have played. needs 'paused' state in round.
-  # Note - be best to overhaul Round class with a good state machine implementation,
-  # as adding 'paused' would be a 4th state, and it's already a mess.
   startRound: ->
     super
     @boardStore = @store.boardStore = {}
@@ -103,6 +101,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     @timeouts.push @round.setAlarm(0, this, this.finishRound)
 
   startBetting: ->
+    # TODO: push board to alert players
     @playState = new BetPlayState(this)
 
   finishRound: ->
@@ -202,8 +201,8 @@ class HandsPlayState
 class BetPlayState
   constructor: (@game) ->
     @name = 'bet'
-    @game.pushStatus("Hands are locked. Time to bet. Type 'bet' and a number.")
-    @game.pushStatus("Type 'fold' to fold and forfeit anything bet already.")
+    @game.pushStatus ["Hands are locked. Time to bet. Type 'bet' and a number.",
+                      "Type 'fold' to fold and forfeit anything bet already."].join("\n")
 
   remainingMinutes: ->
     @game.round.minutesLeft() - @game.settleDuration
@@ -216,7 +215,7 @@ class BetPlayState
 
   vetAction: (action, betAction) ->
     throw "Hands are locked" if action == 'play'
-    throw "You can't call yet." if betAction == 'call'
+    throw "You can't call yet." if betAction == 'call' # TODO: reconsider this - could just have it be synonym for 'bet {highest}' - which is ok
 
 
 class SettlePlayState
@@ -224,10 +223,10 @@ class SettlePlayState
     @name = 'settle'
     # TODO: campfire screws up the ordering - pushing all at once will have 'paste' style formatting (bad?)
     # - so either push as a paragraph or add some sleeps to it.
-    @game.pushStatus("No new bets. Time to settle up. ")
-    @game.pushStatus("Type 'call' to match the highest bid and stay in.")
-    @game.pushStatus("Type 'fold' to fold and forfeit anything bet already.")
-    @game.pushStatus("* Doing nothing will automatically call *.")
+    @game.pushStatus ["No new bets. Time to settle up. ",
+                      "Type 'call' to match the highest bid and stay in.",
+                      "Type 'fold' to fold and forfeit anything bet already.",
+                      "* Doing nothing will automatically call *."].join("\n")
 
   remainingMinutes: ->
     @game.round.minutesLeft()
