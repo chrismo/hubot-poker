@@ -103,6 +103,16 @@ describe 'Dealer', ->
     result = dealer.play('sara', '343434')
     expect(result).toBe "sara played 343434"
 
+  it 'should ask the game to vet the player if it supports it', ->
+    dealer.currentGameClass = VetPlayerGame
+    dealer.startNewGame()
+    dealer.game.denyPlayerName = 'chrismo'
+    result = dealer.play('romer', '243243')
+    expect(result).toBe 'Need a second player to start the next round.'
+    expect(-> dealer.play('chrismo', '123123')).toThrow "No can do for chrismo"
+    result = dealer.play('romer', '243243')
+    expect(result).toBe 'Need a second player to start the next round.'
+
 
 class KillEmAll extends BaseGame
   constructor: ->
@@ -123,6 +133,16 @@ class KillEmAll extends BaseGame
 
 
 class LoserWins extends BaseGame
+
+
+class VetPlayerGame extends BaseGame
+  constructor: (@denyPlayerName) ->
+    @round = new Rounds.TimedRound(1)
+
+  vetPlayerForPlaying: (playerName) ->
+    throw "No can do for #{playerName}" if playerName == @denyPlayerName
+
+  play: (@playerName, @playerHand) ->
 
 
 class FakeListener

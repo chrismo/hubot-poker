@@ -150,12 +150,21 @@ describe 'ReverseHoldEm', ->
     expect(game.boardStore.chrismo.folded).toBe true
     expect(game.winningHandResult.playerName).toBe 'romer'
 
+  it 'should not allow a player with no points to play', ->
+    expect(game.playerStore.length).toBe 0
+    expect(game.vetPlayerForPlaying('chrismo')).toBe true
+    game.play('chrismo', '112357')
+    expect(game.playerStore[0].points).toBe 24
+    expect(game.vetPlayerForPlaying('chrismo')).toBe true
+    game.playerStore[0].points = 0
+    expect(-> game.vetPlayerForPlaying('chrismo')).toThrow "No dough, no show."
+
   it 'should not allow a folded player to call', ->
     # it doesn't but it's a thrown err out of the pot
     # which is a little confusing to display there, but
     # it doesn't cause any problems.
 
-  it 'should not show folded player amount in pot after win', ->
+  it 'should not show folded player amount in pot after round is over', ->
     # the player is not in the pot to have their totalBet
     # value reset to 0. So ... maybe the POT needs to track
     # folded players, instead of the game?

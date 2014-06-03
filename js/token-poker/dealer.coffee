@@ -16,7 +16,7 @@ module.exports = class Dealer
   diagnostic: ->
     ["@gameClasses: #{(gameClass.name for gameClass in @gameClasses).join(',')}",
      "@id: #{@id}",
-     "@playCache: #{@playCache}",
+     "@playCache: #{([play.playerName, play.playerHand] for play in @playCache).join(',')}",
      (if (@game && @game.diagnostic) then @game.diagnostic() else '')].join("\n")
 
   listGames: ->
@@ -37,10 +37,11 @@ module.exports = class Dealer
     @game.setListener(this)
     @game
 
-  play: (player, playerHand) ->
+  play: (playerName, playerHand) ->
     this.startNewGame() if not @game
     if !@game.round.isStarted()
-      @playCache.push {player: player, playerHand: playerHand}
+      @game.vetPlayerForPlaying(playerName) if @game.vetPlayerForPlaying
+      @playCache.push {player: playerName, playerHand: playerHand}
       if this.playersInPlayCache() > 1
         results = []
         while @playCache.length > 0
@@ -50,21 +51,20 @@ module.exports = class Dealer
       else
         "Need a second player to start the next round."
     else
-      @game.play(player, playerHand)
+      @game.play(playerName, playerHand)
 
   playersInPlayCache: ->
     players = (play.player for play in @playCache)
     _.uniq(players).length
 
-  # pass-through stuff sorta smelly?
-  bet: (player, bet) ->
-    @game.bet(player, bet) if @game
+  bet: (playerName, bet) ->
+    @game.bet(playerName, bet) if @game
 
-  call: (player) ->
-    @game.call(player) if @game
+  call: (playerName) ->
+    @game.call(playerName) if @game
 
-  fold: (player) ->
-    @game.fold(player) if @game
+  fold: (playerName) ->
+    @game.fold(playerName) if @game
 
   fundPlayer: (playerName, amount) ->
     @game.fundPlayer(playerName, amount) if @game and @game.fundPlayer

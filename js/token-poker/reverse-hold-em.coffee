@@ -26,9 +26,8 @@ module.exports = class ReverseHoldEm extends BaseGame
     (if @round.diagnostic then @round.diagnostic() else '') +
     (if @pot.diagnostic then @pot.diagnostic() else '')
 
-  # TODO: BUG - if a player is out of points, but they are one of first 2 players, crazyness ensues
   play: (playerName, playerHand) ->
-    @playState.vetAction('play')
+    this.vetPlayerForPlaying(playerName)
     this.ensureRoundStarted()
     player = this.ensurePlayerInStore(playerName)
     this.storeHandResult(new HandResult(player, playerHand, @matcher.matchHighest(playerHand)))
@@ -51,6 +50,12 @@ module.exports = class ReverseHoldEm extends BaseGame
     @pot.call(this.vetPlayerForBetting(playerName, 'call'))
     this.pushBoard()
     null
+
+  vetPlayerForPlaying: (playerName) ->
+    @playState.vetAction('play')
+    player = this.getPlayerFromStore(playerName)
+    throw "No dough, no show." if player && player.points == 0
+    true
 
   vetPlayerForBetting: (playerName, betAction) ->
     @playState.vetAction('bet', betAction)
@@ -186,7 +191,6 @@ class HandsPlayState
     @name = 'play'
 
   remainingMinutes: ->
-    console.log "#{@game.round.minutesLeft()} - #{@game.betDuration} - #{@game.settleDuration}"
     @game.round.minutesLeft() - @game.betDuration - @game.settleDuration
 
   nextStateLabel: ->
