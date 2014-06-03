@@ -207,6 +207,7 @@ class BetPlayState
   constructor: (@game) ->
     @name = 'bet'
     @game.pushStatus ["Hands are locked. Time to bet. Type 'bet' and a number.",
+                      "Type 'call' to match the highest bid so far.",
                       "Type 'fold' to fold and forfeit anything bet already."].join("\n")
 
   remainingMinutes: ->
@@ -216,11 +217,10 @@ class BetPlayState
     'Settle'
 
   boardInstructions: ->
-    'bet [xx] | fold'
+    'bet [xx] | call | fold'
 
   vetAction: (action, betAction) ->
     throw "Hands are locked" if action == 'play'
-    throw "You can't call yet." if betAction == 'call' # TODO: reconsider this - could just have it be synonym for 'bet {highest}' - which is ok
 
 
 class SettlePlayState

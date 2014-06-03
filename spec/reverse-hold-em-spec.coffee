@@ -32,7 +32,13 @@ describe 'ReverseHoldEm', ->
     game.bet('chrismo', '10') # demo auto-call
     game.bet('romer', '12')
     game.fold('sara')
-    expect(-> game.call('glv')).toThrow "You can't call yet."
+    # player can call at this point now. It's potentially confusing if the player
+    # has a strict expectation that call either means no higher bets can be made
+    # or that the call command will be sticky, meaning it auto-adjusts to higher
+    # bets. Play testing so far has shown players to be more confused over not
+    # being able to issue this command at this point, presuming it would be
+    # simply synonymous with "bet #{highest}".
+    game.call('glv')
 
     game.settleUp()
 
@@ -75,7 +81,7 @@ describe 'ReverseHoldEm', ->
     time.execCallback()
     expect(game.showBoard()).toBe (
           "Reverse Hold 'em       Hole: X X         Settle In: soon\n" +
-          "                    bet [xx] | fold                     \n" +
+          "                 bet [xx] | call | fold                 \n" +
           "                                               POT / ALL\n" +
           "romer                555 964  Three of a Kind    1 /  24\n" +
           "chrismo              112 234  Two Pair           1 /  24"
