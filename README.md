@@ -8,15 +8,15 @@ Contributors: glv, woodall
 - Five of a kind (133 333): 540 combinations
 - Two triples (223 233): 900 combinations
 - Full house (113 333): 1,350 combinations
-- Six straight (132 465): 4,320 combinations
+- Six straight (132 465): 3,600 combinations
 - Three pair (113 773): 10,800 combinations
 - Four of a kind (123 333): 10,800 combinations
-- Five straight (132 495): 29,144 combinations
+- Five straight (132 495): 25,184 combinations
 - Crowded house (113 733): 43,200 combinations
 - One triple (111 798): 100,800 combinations
-- Snowflake (123 798): 130,336 combinations
+- Snowflake (123 798): 133,216 combinations
 - Two pair (113 738): 226,800 combinations
-- One pair (113 798): 441,000 combinations
+- One pair (113 798): 442,800 combinations
 
 Interestingly, unlike card poker, a hand with no duplicate numbers and no
 sequence of five or more is not the most common hand; two-pair and one-pair
@@ -33,7 +33,7 @@ Other interesting hands:
 
 ### Notes
 
-0 acts as an Ace, can be low or high in a straight, but no wrapping.
+0 no longer acts as an Ace, high or low. It's simply low.
 
 <hr>
 

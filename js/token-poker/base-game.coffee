@@ -7,15 +7,15 @@ module.exports = class BaseGame
       new TokenPoker.GroupedHand('Five of a Kind', '51', 540),
       new TokenPoker.GroupedHand('Deuce Trips', '33', 900),
       new TokenPoker.GroupedHand('Full House', '42', 1350),
-      new TokenPoker.StraightHand('Six Straight', 6, 4320),
+      new TokenPoker.StraightHand('Six Straight', 6, 3600),
       new TokenPoker.GroupedHand('Three Pair', '222', 10800),
       new TokenPoker.GroupedHand('Four of a Kind', '411', 10800),
-      new TokenPoker.StraightHand('Five Straight', 5, 29144),
+      new TokenPoker.StraightHand('Five Straight', 5, 25184),
       new TokenPoker.GroupedHand('Crowded House', '321', 43200),
       new TokenPoker.GroupedHand('Three of a Kind', '3111', 100800),
-      new TokenPoker.GroupedHand('Snowflake', '111111', 130336),
+      new TokenPoker.GroupedHand('Snowflake', '111111', 133216),
       new TokenPoker.GroupedHand('Two Pair', '2211', 226800),
-      new TokenPoker.GroupedHand('One Pair', '21111', 441000)
+      new TokenPoker.GroupedHand('One Pair', '21111', 442800)
     ])
     @matcher = new TokenPoker.HandMatcher(@registry)
 

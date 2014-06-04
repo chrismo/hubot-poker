@@ -103,11 +103,7 @@ describe 'StraightHand', ->
     expect(five.matches('234-568')).toBe true
     expect(five.matches('234-567')).toBe false
     expect(five.matches('234-610')).toBe true
-
-  it 'matches 5 straight, zero high', ->
-    five = new TokenPoker.StraightHand('5 Straight', 5)
-    expect(five.matches('167890')).toBe true
-    expect(five.matches('163890')).toBe false
+    expect(five.matches('167890')).toBe false
 
   it 'matches 5 straight - pair in the middle', ->
     five = new TokenPoker.StraightHand('5 Straight', 5)
@@ -117,13 +113,13 @@ describe 'StraightHand', ->
     three = new TokenPoker.StraightHand('3 Straight', 3)
     expect(three.matches('828348')).toBe true
     expect(three.matches('012 777')).toBe true
-    expect(three.matches('890 333')).toBe true
+    expect(three.matches('890 333')).toBe false
 
   it 'matches 6 straight', ->
     six = new TokenPoker.StraightHand('6 Straight', 6)
     expect(six.matches('321 456')).toBe true
     expect(six.matches('210 354')).toBe true
-    expect(six.matches('980 765')).toBe true
+    expect(six.matches('980 765')).toBe false
     expect(six.matches('890 123')).toBe false
 
 describe 'OddsCalculator', ->
@@ -144,7 +140,7 @@ describe 'OddsCalculator', ->
     twoStraight = new TokenPoker.StraightHand('2 Straight', 2)
     odds = new TokenPoker.OddsCalculator(new TokenPoker.HandRegistry([twoStraight]), 999)
     odds.calculate()
-    expect(twoStraight.matchCount).toBe 438
+    expect(twoStraight.matchCount).toBe 390
 
 describe 'HandRegistry', ->
   it 'sorts by match count', ->

@@ -21,17 +21,17 @@ describe 'Stockpile', ->
 
   it 'should tally scores', ->
     result = game.play('chrismo', '112345')
-    expect(result.score).toBe 34
+    expect(result.score).toBe 39
     expect(result.playerName).toBe 'chrismo'
-    expect(result.playerRoundScore).toBe 34
-    expect(game.scoreStorage.chrismo).toBe 34
+    expect(result.playerRoundScore).toBe 39
+    expect(game.scoreStorage.chrismo).toBe 39
 
     result = game.play('chrismo', '113674')
     expect(result.score).toBe 2
     expect(result.playerName).toBe 'chrismo'
-    expect(result.playerRoundScore).toBe 36
+    expect(result.playerRoundScore).toBe 41
     expect(result.playerRank).toBe 1
-    expect(game.scoreStorage.chrismo).toBe 36
+    expect(game.scoreStorage.chrismo).toBe 41
 
     result = game.play('romer', '224 359')
     expect(result.score).toBe 2

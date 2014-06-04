@@ -194,7 +194,6 @@ class HandResult
     else if @hand.matchCount != other.hand.matchCount
       @hand.matchCount - other.hand.matchCount
     else
-      console.log "#{this.playerHandSorted()} #{other.playerHandSorted()}"
       other.playerHandSorted() - this.playerHandSorted()
 
 

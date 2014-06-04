@@ -118,16 +118,10 @@ module.exports.StraightHand = class StraightHand extends Hand
     @count = count - 1
 
   matchesFromDigits: (playerHandDigits) ->
-    this.countOfOneIntervals(playerHandDigits) == @count ||
-        this.countOfOneIntervals(playerHandDigits, {0: 10}) == @count
+    this.countOfOneIntervals(playerHandDigits) == @count
 
-  countOfOneIntervals: (playerHand, digitMap) ->
-    digits = playerHand.map (digit) ->
-      if digitMap
-        if digitMap[digit] then digitMap[digit] else digit
-      else
-        digit
-    sorted = digits.sort (a, b) -> a - b
+  countOfOneIntervals: (playerHandDigits) ->
+    sorted = playerHandDigits.sort (a, b) -> a - b
     uniq = _.uniq(sorted)
     intervals = uniq.map (d, index) ->
       uniq[index + 1] - uniq[index]

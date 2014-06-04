@@ -1,9 +1,9 @@
-TokenPoker = require('./js/token-poker/high-hand-game')
+Stockpile = require('./js/token-poker/stockpile')
 TPCore = require('./js/token-poker/core')
 
 class GameOddsCalculator
   execute: ->
-    game = new TokenPoker.Stockpile({})
+    game = new Stockpile({})
     if true
       game.calculateOdds()
     else # a fast executing version to test output and such
