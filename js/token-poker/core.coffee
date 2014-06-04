@@ -70,7 +70,7 @@ module.exports.Hand = class Hand
     @debug = false
 
   matches: (playerHand) ->
-    digits = playerHand.replace(/\D/g, '').split('').map (c) -> parseInt(c)
+    digits = Hand.toDigitArray(playerHand)
     this.matchesFromDigits(digits)
 
   addMatch: (playerHand) ->
@@ -79,6 +79,9 @@ module.exports.Hand = class Hand
 
   codeGen: ->
     ''
+
+  @toDigitArray: (playerHand) ->
+    playerHand.replace(/\D/g, '').split('').map (c) -> parseInt(c)
 
 
 module.exports.GroupedHand = class GroupedHand extends Hand
@@ -124,8 +127,7 @@ module.exports.StraightHand = class StraightHand extends Hand
         if digitMap[digit] then digitMap[digit] else digit
       else
         digit
-    sorted = digits.sort (a, b) ->
-      a - b
+    sorted = digits.sort (a, b) -> a - b
     uniq = _.uniq(sorted)
     intervals = uniq.map (d, index) ->
       uniq[index + 1] - uniq[index]

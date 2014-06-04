@@ -165,6 +165,14 @@ describe 'ReverseHoldEm', ->
     game.playerStore[0].points = 0
     expect(-> game.vetPlayerForPlaying('chrismo')).toThrow "No dough, no show."
 
+  it 'should properly order hands with same matchCount', ->
+    # 4-oak and 3 pair have the same matchCount, so we decide
+    # who wins by what works for other hands, simply sort by
+    # digits hi-to-low and subtract.
+    game.play('romer', '213333')
+    game.play('chrismo', '443322')
+    expect(game.handsInWinningOrder()[0].playerName).toBe 'chrismo'
+
   it 'should not allow a folded player to call', ->
     # it doesn't but it's a thrown err out of the pot
     # which is a little confusing to display there, but

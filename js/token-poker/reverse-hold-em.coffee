@@ -52,6 +52,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     null
 
   vetPlayerForPlaying: (playerName) ->
+    # TODO: allow folding at anytime, but have to workaround checkForLoneWinner and call it again at the start of betting.
     @playState.vetAction('play')
     player = this.getPlayerFromStore(playerName)
     throw "No dough, no show." if player && player.points == 0
@@ -115,6 +116,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     @winningHandResult = this.handsInWinningOrder()[0]
     @pot.settleUp()
     @pot.goesTo(@winningHandResult.player) if @winningHandResult
+    # TODO: don't show instructions on win board
     this.pushStatus(this.showBoard())
     this.clearTimeouts()
     @playState = new HandsPlayState(this)
@@ -124,6 +126,8 @@ module.exports = class ReverseHoldEm extends BaseGame
     @timeouts = []
 
   settleUp: ->
+    # TODO - if highest bets are even, if players have either bet or called, could finish
+    # the game immediately at this stage.
     @playState = new SettlePlayState(this)
 
   applyHoleDigits: ->
@@ -135,11 +139,7 @@ module.exports = class ReverseHoldEm extends BaseGame
   handsInWinningOrder: ->
     handResults = for playerName, handResult of @boardStore
       handResult
-    handResults.sort (a, b) ->
-      if a.folded != b.folded
-        a.foldedAsSortInt() - b.foldedAsSortInt()
-      else
-        a.hand.matchCount - b.hand.matchCount
+    handResults.sort (a, b) -> a.compare(b)
 
   showBoard: ->
     width = 56
@@ -158,7 +158,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     header = [
       "#{title}#{status}",
       @playState.boardInstructions().center(width),
-      "                                               POT / ALL",
+      "POT / ALL".rjust(width),
       ''
     ]
 
@@ -184,6 +184,18 @@ class HandResult
 
   foldedAsSortInt: ->
     if @folded then 1 else 0
+
+  playerHandSorted: ->
+    ((TokenPoker.Hand.toDigitArray(@playerHand)).sort (a, b) -> b - a).join('')
+
+  compare: (other) ->
+    if @folded != other.folded
+      this.foldedAsSortInt() - other.foldedAsSortInt()
+    else if @hand.matchCount != other.hand.matchCount
+      @hand.matchCount - other.hand.matchCount
+    else
+      console.log "#{this.playerHandSorted()} #{other.playerHandSorted()}"
+      other.playerHandSorted() - this.playerHandSorted()
 
 
 class HandsPlayState
