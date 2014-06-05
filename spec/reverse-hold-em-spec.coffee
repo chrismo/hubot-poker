@@ -173,6 +173,14 @@ describe 'ReverseHoldEm', ->
     game.play('chrismo', '443322')
     expect(game.handsInWinningOrder()[0].playerName).toBe 'chrismo'
 
+  it 'is not that simple', ->
+    # this incorrectly gives the win to woodall because sorted
+    # the hands are 966555 and 666551. So, a bit of wishful
+    # thinking with last night's commit.
+    game.play('sara', '666 551')
+    game.play('woodall', '555 669')
+    expect(game.handsInWinningOrder()[0].playerName).toBe 'sara'
+
   it 'should not allow a folded player to call', ->
     # it doesn't but it's a thrown err out of the pot
     # which is a little confusing to display there, but
