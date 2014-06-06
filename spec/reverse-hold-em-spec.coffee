@@ -181,6 +181,10 @@ describe 'ReverseHoldEm', ->
     game.play('woodall', '555 669')
     expect(game.handsInWinningOrder()[0].playerName).toBe 'sara'
 
+  it 'is really not that simple', ->
+    # because this is only taking the submitted hand into account,
+    # when hole cards are frequently included into making the winning hand.
+
   it 'should not allow a folded player to call', ->
     # it doesn't but it's a thrown err out of the pot
     # which is a little confusing to display there, but
