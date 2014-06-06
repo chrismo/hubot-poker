@@ -103,22 +103,6 @@ describe 'Stockpile', ->
     time.execCallback()
     expect(listener.scoreboardText).toBe '** WINNER **: chrismo\n\nchrismo: 2'
 
-  it 'maybe should display NEW LEADER when that happens?'
-
-  it 'should be named high-hand-accumulate or something?'
-
-  it 'should track submitted hands per player so curves can be applied'
-
-  it 'should dilute points of players over the median'
-
-  it 'should maybe not dilute points of players over the median but losing?'
-  # if i'm trying to catch up and need to play lots of small hands to do so,
-  # i have no incentive to try this as whatever points i get on a lot of
-  # one-pair, two-pair hands will then be diluted.
-  #
-  # or is that just tough darts when a single play of a good hand dominates
-
-  it 'should not affect points of players at or under the median'
 
 class FakeListener
   onStatus: (@scoreboardText) ->

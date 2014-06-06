@@ -195,6 +195,18 @@ describe 'ReverseHoldEm', ->
     # value reset to 0. So ... maybe the POT needs to track
     # folded players, instead of the game?
 
+  it 'should not allow player with more points to bet more than an all in player', ->
+    # a -> bet all in (20)
+    # b -> bet 30 <= nope
+    # unless there's a 3rd player putting up 30 as well
+
+  it 'should not allow all in player to win more than they put in', ->
+    # a -> bet 30
+    # b -> all in (20)
+    # b wins
+    # b can't collect 30 from player a, only 20
+    # http://en.wikipedia.org/wiki/Betting_in_poker#.22All_in.22
+
 
 
 
