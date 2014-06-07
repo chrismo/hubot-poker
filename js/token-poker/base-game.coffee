@@ -1,4 +1,5 @@
 TokenPoker = require('./core')
+_ = require('underscore')
 
 module.exports = class BaseGame
   constructor: (@store, @round) ->
@@ -18,6 +19,7 @@ module.exports = class BaseGame
       new TokenPoker.GroupedHand('One Pair', '21111', 442800)
     ])
     @matcher = new TokenPoker.HandMatcher(@registry)
+    @randomProvider ||= new RandomProvider
 
   ensureRoundStarted: ->
     this.startRound() if !@round.isStarted()
@@ -32,13 +34,23 @@ module.exports = class BaseGame
     @round.end()
 
   randomDigit: ->
-    # 0 - 9
-    Math.floor(Math.random() * 10)
+    @randomProvider.randomDigit()
+
+  randomHand: ->
+    hand = []
+    _.times(6, (n) => (hand.push(this.randomDigit())))
+    hand.join('')
 
   setListener: (@listener) ->
 
   pushStatus: (text) ->
     @listener.onStatus(text) if @listener
+
+
+class RandomProvider
+  randomDigit: ->
+    # 0 - 9
+    Math.floor(Math.random() * 10)
 
 
 `

@@ -7,4 +7,5 @@
 # - the highest matching hand type
 # - and a compare method against other player hands
 module.exports = class PlayerHand
-  constructor: (@playerDigits) ->
+  constructor: (@player, @playerDigits, @matchedHand) ->
+
