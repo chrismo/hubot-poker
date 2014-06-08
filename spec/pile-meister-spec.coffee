@@ -25,11 +25,17 @@ describe 'PileMeister', ->
     expect(playerHand.player.points).toBe 2
     expect(playerHand.player.rank).toBe 1
 
-  it 'should limit number of plays in a time period', ->
+  it 'should limit number of deals in a time period', ->
     game.deal('chrismo')
     expect(-> game.deal('chrismo')).toThrow 'too soon chrismo'
     time.now = builder.withMinute(1).build()
     game.deal('chrismo')
+
+  it 'should limit number of breaks in a time period', ->
+    game.break('chrismo')
+    expect(-> game.break('chrismo')).toThrow 'too soon chrismo'
+    time.now = builder.withMinute(1).build()
+    game.break('chrismo')
 
   it 'should chain two deals together and split the points', ->
     rand.pushFakeHand('112357', '555555')
@@ -46,7 +52,7 @@ describe 'PileMeister', ->
     expect(b.player.points).toBe (50001)
     expect(game.chain.length).toBe 0
 
-  it 'should allow same player to keep chaining', ->
+  it 'should allow same player in chain multiple times', ->
     rand.pushFakeHand('112357', '112357', '112357')
     game.deal('chrismo', 'chain')
     game.deal('romer', 'chain')
@@ -55,10 +61,43 @@ describe 'PileMeister', ->
     expect(game.playerStore[0].points).toBe 3
     expect(game.playerStore[1].points).toBe 3
 
-  it 'should allow the player to break the chain for their turn', ->
-    # player can play bust for their turn with a number of points.
-    # the chain ends, the player busting loses the number of points,
-    # but so does the chain. Any remaining in the chain is split
-    # with the players in the chain.
+  it 'should distribute chain points if broken with no points', ->
+    rand.pushFakeHand('112357')
+    game.deal('chrismo', 'chain')
+    expect(game.playerStore[0].points).toBe 0
+    game.break('romer')
+    expect(game.playerStore[0].points).toBe 2
+    expect(game.playerStore[1].points).toBe 0
 
+  it 'should deduct points from player and chain if broken with points', ->
+    rand.pushFakeHand('112357', '112257')
+    game.deal('romer')
+    game.deal('chrismo', 'chain')
+    expect(game.playerStore[0].points).toBe 2
+    time.now = builder.withMinute(1).build()
+    game.break('romer', '2')
+    expect(game.playerStore[0].points).toBe 0
+    expect(game.playerStore[1].points).toBe 2
 
+  it 'should cap break points to player available points', ->
+    rand.pushFakeHand('112357', '112257')
+    game.deal('romer')
+    game.deal('chrismo', 'chain')
+    expect(game.playerStore[0].points).toBe 2
+    time.now = builder.withMinute(1).build()
+    game.break('romer', '4')
+    expect(game.playerStore[0].points).toBe 0
+    expect(game.playerStore[1].points).toBe 2
+
+  it 'should not cap break points to chain total', ->
+    # for now, a deliberate decision - if you as a player
+    # decide to spend too many points to break the chain
+    # yer losing all those points.
+    rand.pushFakeHand('112257', '112357')
+    game.deal('romer')
+    game.deal('chrismo', 'chain')
+    expect(game.playerStore[0].points).toBe 4
+    time.now = builder.withMinute(1).build()
+    game.break('romer', '4')
+    expect(game.playerStore[0].points).toBe 0
+    expect(game.playerStore[1].points).toBe 0

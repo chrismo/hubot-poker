@@ -37,6 +37,15 @@ module.exports = class PileMeister extends BaseGame
       @chain.push playerHand
     playerHand
 
+  break: (playerName, points) ->
+    this.ensureRoundStarted()
+    player = this.ensurePlayerInStore(playerName)
+    this.vetTimeToPlay(player)
+    penalty = if points == undefined then 0 else parseInt(points)
+    penalty = Math.min(penalty, player.points)
+    player.points -= penalty
+    chainTotal = this.applyChain(penalty) unless @chain.length == 0
+
   vetTimeToPlay: (player) ->
     if player.lastPlay == undefined
       player.lastPlay = @round.now()
@@ -44,12 +53,15 @@ module.exports = class PileMeister extends BaseGame
       seconds = (@round.now() - player.lastPlay) / 1000
       throw "too soon #{player.name}" if seconds < 60
 
-  applyChain: ->
+  applyChain: (penalty) ->
     players = (playerHand.player for playerHand in @chain)
     players = _.uniq(players)
     chainTotal = (ph.score for ph in @chain).reduce (t, s) -> t + s
+    chainTotal -= penalty unless penalty == undefined
+    chainTotal = Math.max(chainTotal, 0)
     (player.points += (chainTotal / players.length) for player in players)
     @chain = []
+    chainTotal
 
   ensurePlayerInStore: (playerName) ->
     player = this.getPlayerFromStore(playerName)
