@@ -9,8 +9,8 @@ module.exports = class PileMeister extends BaseGame
   constructor: (@store, @round) ->
     super(@store, @round)
     @playerStore = @store.playerStore ||= []
-
     @round ||= new Rounds.TimedRound(60)
+    @chain = []
 
   startRound: ->
     super
@@ -19,22 +19,42 @@ module.exports = class PileMeister extends BaseGame
   resetScores: ->
     @playerStore = []
 
-  deal: (playerName) ->
+  deal: (playerName, chain) ->
     this.ensureRoundStarted()
     player = this.ensurePlayerInStore(playerName)
+    this.vetTimeToPlay(player)
     digits = this.randomHand()
     playerHand = new PlayerHand(player, digits, @matcher.matchHighest(digits))
     playerHand.score = Math.floor(1000000 / playerHand.matchedHand.matchCount)
-    playerHand.player.points += playerHand.score
     player.rank = this.playerRank(playerName)
+    if chain == undefined
+      if @chain.length == 0
+        playerHand.player.points += playerHand.score
+      else
+        @chain.push playerHand
+        this.applyChain()
+    else
+      @chain.push playerHand
     playerHand
+
+  vetTimeToPlay: (player) ->
+    if player.lastPlay == undefined
+      player.lastPlay = @round.now()
+    else
+      seconds = (@round.now() - player.lastPlay) / 1000
+      throw "too soon #{player.name}•" if seconds < 60
+
+  applyChain: ->
+    players = (playerHand.player for playerHand in @chain)
+    players = _.uniq(players)
+    chainTotal = @chain.reduce (t, s) -> t.score + s.score
+    (player.points += (chainTotal / players.length) for player in players)
 
   ensurePlayerInStore: (playerName) ->
     player = this.getPlayerFromStore(playerName)
     unless player
       player = new Player(playerName, 0)
       @playerStore.push(player)
-
     player
 
   getPlayerFromStore: (playerName) ->
@@ -52,12 +72,6 @@ module.exports = class PileMeister extends BaseGame
     super
     @winner = this.scoresInWinningOrder()[0]
     this.pushScores()
-
-  addScore: (playerHand) ->
-    playerHand.player.score ||= 0
-
-    @scoreStorage[playerHand.player.name] ||= 0
-    @scoreStorage[playerHand.player.name] += playerHand.score
 
   getStatus: ->
     this.scoreboard()

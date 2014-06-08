@@ -25,14 +25,25 @@ describe 'PileMeister', ->
     expect(playerHand.player.points).toBe 2
     expect(playerHand.player.rank).toBe 1
 
-  it 'should limit number of plays in a time period'
-    # or change to deal the hand automatically, so you don't need a fob
+  it 'should limit number of plays in a time period', ->
+    game.deal('chrismo')
+    expect(-> game.deal('chrismo')).toThrow 'too soon chrismo'
+    time.now = builder.withMinute(1).build()
+    game.deal('chrismo')
 
-  it 'should allow optional chain command', ->
-    # anyone at anytime can be dealt a hand, plus chain, which means
-    # they will be linked to the next hand dealt normally and split
-    # the points. But anyone can play chain as well after, and thus
-    # add themselves on to the wagon.
+  it 'should chain two deals together and split the points', ->
+    rand.pushFakeHand('112357', '555555')
+    a = game.deal('chrismo', 'chain')
+    expect(a.playerDigits).toBe '112357'
+    expect(a.score).toBe 2
+    expect(a.player.points).toBe 0
+    expect(a.player.rank).toBe 1
+    expect(game.chain.length).toBe 1
+    b = game.deal('romer')
+    expect(b.playerDigits).toBe '555555'
+    expect(b.score).toBe 100000
+    expect(a.player.points).toBe (50001)
+    expect(b.player.points).toBe (50001)
 
   it 'should allow same player to keep chaining'
 
