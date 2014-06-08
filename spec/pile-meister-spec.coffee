@@ -44,8 +44,16 @@ describe 'PileMeister', ->
     expect(b.score).toBe 100000
     expect(a.player.points).toBe (50001)
     expect(b.player.points).toBe (50001)
+    expect(game.chain.length).toBe 0
 
-  it 'should allow same player to keep chaining'
+  it 'should allow same player to keep chaining', ->
+    rand.pushFakeHand('112357', '112357', '112357')
+    game.deal('chrismo', 'chain')
+    game.deal('romer', 'chain')
+    time.now = builder.withMinute(1).build()
+    game.deal('chrismo')
+    expect(game.playerStore[0].points).toBe 3
+    expect(game.playerStore[1].points).toBe 3
 
   it 'should allow the player to break the chain for their turn', ->
     # player can play bust for their turn with a number of points.

@@ -42,13 +42,14 @@ module.exports = class PileMeister extends BaseGame
       player.lastPlay = @round.now()
     else
       seconds = (@round.now() - player.lastPlay) / 1000
-      throw "too soon #{player.name}•" if seconds < 60
+      throw "too soon #{player.name}" if seconds < 60
 
   applyChain: ->
     players = (playerHand.player for playerHand in @chain)
     players = _.uniq(players)
-    chainTotal = @chain.reduce (t, s) -> t.score + s.score
+    chainTotal = (ph.score for ph in @chain).reduce (t, s) -> t + s
     (player.points += (chainTotal / players.length) for player in players)
+    @chain = []
 
   ensurePlayerInStore: (playerName) ->
     player = this.getPlayerFromStore(playerName)
