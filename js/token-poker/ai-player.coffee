@@ -7,9 +7,11 @@ module.exports = class AiPlayer
   constructor: (@name, @dealer) ->
     @functions = []
     @functions.push (-> (@dealer.play(@name, this.randomHand()))) if @dealer.game.play
-    @functions.push (-> (@dealer.bet(@name, (Math.floor(Math.random() * 5))))) if @dealer.game.bet
+    @functions.push (-> (@dealer.bet(@name, this.randomInt(20)))) if @dealer.game.bet
     @functions.push (-> (@dealer.fold(@name))) if @dealer.game.fold
     @functions.push (-> (@dealer.call(@name))) if @dealer.game.call
+    @functions.push (-> (@dealer.deal(@name, ['chain', undefined][this.randomInt(2)]))) if @dealer.game.deal
+    @functions.push (-> (@dealer.break(@name, this.randomInt(20)))) if @dealer.game.break
 
     @alive = true
     @limit = 20
@@ -27,6 +29,7 @@ module.exports = class AiPlayer
 
     index = (Math.floor(Math.random() * @functions.length)) if index == undefined
     try
+      # console.log("#{@name} calling function index #{index}")
       result = @functions[index].call(this)
       for result in _.flatten([result])
         if result
@@ -34,10 +37,13 @@ module.exports = class AiPlayer
     catch error
       @dealer.onStatus(error)
     finally
-      seconds = (Math.random() * 15) + 15
+      seconds = (Math.random() * 5) + 59
       that = this
       callback = this.doSomething
       setTimeout((-> (callback.call(that))), seconds * 1000)
 
   die: ->
     @alive = false
+
+  randomInt: (maxExclusive) ->
+    Math.floor(Math.random() * maxExclusive)

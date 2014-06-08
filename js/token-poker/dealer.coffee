@@ -1,6 +1,7 @@
 AiPlayer = require('./ai-player')
-Stockpile = require('./stockpile')
+PileMeister = require('./pile-meister')
 ReverseHoldEm = require('./reverse-hold-em')
+Stockpile = require('./stockpile')
 _ = require('underscore')
 
 module.exports = class Dealer
@@ -8,7 +9,7 @@ module.exports = class Dealer
     @store ||= {}
     @store.tokenPoker ||= {}
     @dealerStore = @store.tokenPoker[@id] ||= {}
-    @gameClasses ||= [ReverseHoldEm, Stockpile]
+    @gameClasses ||= [PileMeister, ReverseHoldEm, Stockpile]
     @currentGameClass = @gameClasses[0]
     @playCache = []
     @ais = []
@@ -39,6 +40,7 @@ module.exports = class Dealer
 
   play: (playerName, playerHand) ->
     this.startNewGame() if not @game
+    return unless @game.play
     if !@game.round.isStarted()
       @game.vetPlayerForPlaying(playerName) if @game.vetPlayerForPlaying
       @playCache.push {player: playerName, playerHand: playerHand}
@@ -57,17 +59,31 @@ module.exports = class Dealer
     players = (play.player for play in @playCache)
     _.uniq(players).length
 
+  # TODO: need a dynamic way for a game to register its commands
+
   bet: (playerName, bet) ->
-    @game.bet(playerName, bet) if @game
+    this.startNewGame() if not @game
+    @game.bet(playerName, bet) if @game.bet
 
   call: (playerName) ->
-    @game.call(playerName) if @game
+    this.startNewGame() if not @game
+    @game.call(playerName) if @game.call
 
   fold: (playerName) ->
-    @game.fold(playerName) if @game
+    this.startNewGame() if not @game
+    @game.fold(playerName) if @game.fold
+
+  deal: (playerName, args...) ->
+    this.startNewGame() if not @game
+    @game.deal(playerName, args) if @game.deal
+
+  break: (playerName, args...) ->
+    this.startNewGame() if not @game
+    @game.break(playerName, args) if @game.break
 
   fundPlayer: (playerName, amount) ->
-    @game.fundPlayer(playerName, amount) if @game and @game.fundPlayer
+    this.startNewGame() if not @game
+    @game.fundPlayer(playerName, amount) if @game.fundPlayer
 
   addAi: (playerName) ->
     ai = new AiPlayer(playerName, this)

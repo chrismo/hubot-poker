@@ -70,6 +70,24 @@ module.exports = (robot) ->
     catch error
       msg.send error
 
+  robot.hear /^deal ?(.*)$/i, (msg) ->
+    try
+      args = msg.match[1].split(' ')
+      dealer = currentDealer(msg)
+      result = dealer.deal(msg.message.user.name, args)
+      handleReply(msg, result)
+    catch error
+      msg.send error
+
+  robot.hear /^break ?(.*)$/i, (msg) ->
+    try
+      args = msg.match[1].split(' ')
+      dealer = currentDealer(msg)
+      result = dealer.break(msg.message.user.name, args)
+      handleReply(msg, result)
+    catch error
+      msg.send error
+
   robot.hear /^poker list games/i, (msg) ->
     try
       msg.send currentDealer(msg).listGames().join("\n")

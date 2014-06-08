@@ -20,6 +20,7 @@ module.exports = class PileMeister extends BaseGame
     @playerStore = []
 
   deal: (playerName, chain) ->
+    chain = this.processOptArg(chain)
     this.ensureRoundStarted()
     player = this.ensurePlayerInStore(playerName)
     this.vetTimeToPlay(player)
@@ -27,24 +28,35 @@ module.exports = class PileMeister extends BaseGame
     playerHand = new PlayerHand(player, digits, @matcher.matchHighest(digits))
     playerHand.score = Math.floor(1000000 / playerHand.matchedHand.matchCount)
     player.rank = this.playerRank(playerName)
-    if chain == undefined
+
+    if chain == 'chain'
+      @chain.push playerHand
+    else
       if @chain.length == 0
         playerHand.player.points += playerHand.score
       else
         @chain.push playerHand
-        this.applyChain()
-    else
-      @chain.push playerHand
-    playerHand
+        chainTotal = this.applyChain()
+        this.pushScores()
+        return [new DealResult(playerHand), new BreakResult(chainTotal)]
+
+    new DealResult(playerHand, chain)
 
   break: (playerName, points) ->
+    points = this.processOptArg(points)
     this.ensureRoundStarted()
     player = this.ensurePlayerInStore(playerName)
     this.vetTimeToPlay(player)
-    penalty = if points == undefined then 0 else parseInt(points)
+    penalty = if points == '' then 0 else parseInt(points)
     penalty = Math.min(penalty, player.points)
     player.points -= penalty
-    chainTotal = this.applyChain(penalty) unless @chain.length == 0
+    chainTotal = this.applyChain(penalty)
+    this.pushScores()
+    new BreakResult(chainTotal)
+
+  processOptArg: (arg) ->
+    arg ||= ''
+    arg = _.flatten([arg]).join()
 
   vetTimeToPlay: (player) ->
     if player.lastPlay == undefined
@@ -56,10 +68,13 @@ module.exports = class PileMeister extends BaseGame
   applyChain: (penalty) ->
     players = (playerHand.player for playerHand in @chain)
     players = _.uniq(players)
-    chainTotal = (ph.score for ph in @chain).reduce (t, s) -> t + s
+    if @chain.length > 0
+      chainTotal = (ph.score for ph in @chain).reduce (t, s) -> t + s
+    else
+      chainTotal = 0
     chainTotal -= penalty unless penalty == undefined
     chainTotal = Math.max(chainTotal, 0)
-    (player.points += (chainTotal / players.length) for player in players)
+    (player.points += Math.floor(chainTotal / players.length) for player in players)
     @chain = []
     chainTotal
 
@@ -104,7 +119,7 @@ module.exports = class PileMeister extends BaseGame
     s.join("\n")
 
   scoresInWinningOrder: ->
-    @playerStore.sort (a, b) -> b.points - a.points
+    (p for p in @playerStore).sort (a, b) -> b.points - a.points
 
   playerRank: (playerName) ->
     rank = null
@@ -113,3 +128,21 @@ module.exports = class PileMeister extends BaseGame
 
   pushScores: ->
     this.pushStatus(this.scoreboard())
+
+
+class DealResult
+  constructor: (@playerHand, @chained) ->
+
+  toStatus: ->
+    ph = @playerHand
+    ch = if @chained == 'chain' then '-=CHAINED=-' else ''
+    "#{ph.playerDigits} => #{ph.matchedHand.name}. #{ph.score} points. #{ch} Player Total: #{ph.player.points}. Place: #{ph.player.rank}"
+
+class BreakResult
+  constructor: (@chainTotal) ->
+
+  toStatus: ->
+    if @chainTotal > 0
+      "CHAIN BROKEN. #{@chainTotal} points split among chained players."
+    else
+      "No chain to break. If you spent points to do it, they still gone. D'oh!"

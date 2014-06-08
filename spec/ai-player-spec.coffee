@@ -17,7 +17,7 @@ describe 'AiPlayer', ->
     ai.doSomething(1)
     expect(dealer.betPlayerName).toBe 'foo'
     expect(dealer.betAmount).toNotBe 'undefined'
-    expect(dealer.betAmount).toBeLessThan 5
+    expect(dealer.betAmount).toBeLessThan 20
 
     ai.doSomething(2)
     expect(dealer.foldPlayerName).toBe 'foo'
