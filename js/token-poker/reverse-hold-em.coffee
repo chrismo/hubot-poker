@@ -6,6 +6,23 @@ Rounds = require('./round')
 TokenPoker = require('./core')
 
 module.exports = class ReverseHoldEm extends BaseGame
+  @help: ->
+    [
+      "Reverse Hold 'em",
+      '',
+      '<6 digits> - Enter a 6 digit token',
+      "bet [xx]   - When it's time to bet, optionally bet a number of points.",
+      "call       - When it's time to bet or settle up, match your bet to the highest bet.",
+      "fold       - When it's time to bet or settle up, fold your hand."
+      '',
+      "Game goes in 3 phases: play phase where anyone can enter their 6 digit token,",
+      "bet phase when you can bet, call or fold, and settle phase where only call or",
+      "fold are allowed. Two community hole cards (random digits) are held until the"
+      "very end of the hand. When revealed, the best hand out of each player's 6",
+      "digits plus the 2 community digits will be assigned to each player and the best",
+      "hand wins. If you do not fold, you will automatically call the highest bet."
+    ].join("\n")
+
   constructor: (@store, @round) ->
     super(@store, @round)
     @playerStore = @store.playerStore ||= []

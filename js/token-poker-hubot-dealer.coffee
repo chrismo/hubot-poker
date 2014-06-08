@@ -8,14 +8,19 @@
 #   TOKEN_POKER_ROOMS - Comma delimited room IDs
 #
 # Commands:
-#   <any 6 digits> - Play a hand of token poker
-#   bet <digits>   - Bet points in token poker
-#   call           - Match highest bet to stay in game
-#   fold           - Fold current hand and forfeit any points bet
-#   poker diag - Diagnostic dump of current state
-#   poker status|board|score - Display the current status, board or score (game dependent).
-#   poker list games - Show the current list of available games.
-#   poker admin [command] - Various admin commands.
+#   <any 6 digits> - Play a hand of token poker.
+#   bet <digits>   - Bet points in token poker.
+#   deal [arg]     - Be dealt a token poker hand, with optional, game-specific arguments.
+#   call           - Match highest bet to stay in token poker game.
+#   fold           - Fold current hand in token poker game and forfeit any points bet.
+#   poker diag               - Diagnostic dump of current state.
+#   poker help               - Help instructions on current game.
+#   poker list games         - Show the current list of available games.
+#   poker status|board|score - Display the current game status (game dependent).
+#   poker admin play [game]            - Change game being played.
+#   poker admin fund [points] [player] - Grant player points (game dependent).
+#   poker admin ai add [name]          - Add AI Player (AIs are VERY dumb).
+#   poker admin ai kill [name]         - You'd be doing us all a favor.
 #
 # Authors:
 #   chrismo
@@ -88,6 +93,14 @@ module.exports = (robot) ->
     catch error
       msg.send error
 
+  robot.hear /^poker help/i, (msg) ->
+    try
+      dealer = currentDealer(msg)
+      result = dealer.help()
+      handleReply(msg, result)
+    catch error
+      msg.send error
+
   robot.hear /^poker list games/i, (msg) ->
     try
       msg.send currentDealer(msg).listGames().join("\n")
@@ -154,3 +167,5 @@ class GameListener
 
   onStatus: (text) ->
     @robot.messageRoom @room, text
+
+  onFinishRound: ->

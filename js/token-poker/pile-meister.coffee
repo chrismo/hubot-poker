@@ -6,10 +6,27 @@ Player = require('./player')
 _ = require('underscore')
 
 module.exports = class PileMeister extends BaseGame
+  @help: ->
+    [
+      'PileMeister - accumulate as many points by end of round.',
+      '',
+      'deal [chain] - Be dealt a hand and optionally chain it to the next play.',
+      'break [xx]   - Break the current chain and optionally remove [xx] points from it.'
+      '',
+      "When a chain of hands is broken, all points in the chain are distributed evenly",
+      "to all players in the chain. The 'deal' command w/o the chain option will add",
+      "your hand to the chain and break it. All points sent to 'break' command will be",
+      "removed from your points total, even if it's more points than are in the chain,",
+      "then subtracted from the chain before distributed to players in the chain. Only",
+      "one command per player per 30 seconds by default. Scores include game config."
+    ].join("\n")
+
   constructor: (@store, @round) ->
     super(@store, @round)
     @playerStore = @store.playerStore ||= []
-    @round ||= new Rounds.TimedRound(60)
+    @round ||= new Rounds.TimedRound(30)
+    @lengthOfRoundInMinutes = @round.total
+    @secondsToWaitBetweenPlays = @lengthOfRoundInMinutes
     @chain = []
 
   startRound: ->
@@ -63,7 +80,7 @@ module.exports = class PileMeister extends BaseGame
       player.lastPlay = @round.now()
     else
       seconds = (@round.now() - player.lastPlay) / 1000
-      throw "too soon #{player.name}" if seconds < 60
+      throw "too soon #{player.name}" if seconds < @secondsToWaitBetweenPlays
 
   applyChain: (penalty) ->
     players = (playerHand.player for playerHand in @chain)
@@ -107,11 +124,20 @@ module.exports = class PileMeister extends BaseGame
   scoreboard: ->
     s = []
 
-    header = switch
-      when @winner
-        ["** WINNER **: #{@winner[0]}", '']
-      else
-        ["Time Left: #{@round.minutesLeft()} minutes", '']
+    header = [
+      'PileMeister',
+      'deal [chain] | break [xx] | poker help',
+      "One command per player per #{@secondsToWaitBetweenPlays} seconds."
+      '---'
+    ]
+    header.push (
+      switch
+        when @winner
+          ["** WINNER **: #{@winner[0]}", '']
+        else
+          ["Time Left: #{@round.minutesLeft()} minutes", '']
+    )
+    header = _.flatten(header)
 
     for player in this.scoresInWinningOrder()
       s.push "#{player.name}: #{player.points}"
@@ -123,7 +149,7 @@ module.exports = class PileMeister extends BaseGame
 
   playerRank: (playerName) ->
     rank = null
-    _.forEach(this.scoresInWinningOrder(), (e, i) -> (rank = i+1 if e.name == playerName))
+    _.forEach(this.scoresInWinningOrder(), (e, i) -> (rank = i + 1 if e.name == playerName))
     rank
 
   pushScores: ->

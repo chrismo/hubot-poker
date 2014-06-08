@@ -30,6 +30,9 @@ module.exports = class Dealer
     map((s) -> s.toLowerCase()).
     join(' ')
 
+  help: ->
+    @currentGameClass.help()
+
   startNewGame: ->
     gameName = @currentGameClass.name
     gameName = gameName[0] + gameName.substr(1)

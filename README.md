@@ -1,6 +1,8 @@
 # Token Poker
 
-Contributors: glv, woodall
+Contributors: 
+- glv (original odds parsing script)
+- woodall (contribution instructions)
 
 ## Hands (in winning order)
 

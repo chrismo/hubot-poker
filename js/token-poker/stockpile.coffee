@@ -4,6 +4,13 @@ Rounds = require('./round')
 _ = require('underscore')
 
 module.exports = class Stockpile extends BaseGame
+  @help: ->
+    [
+      'Stockpile - accumulate as many points by end of round.',
+      '',
+      '<6 digits> - Enter a 6 digit token',
+    ].join("\n")
+
   constructor: (@store, @round) ->
     super(@store, @round)
     @scoreStorage = @store.scores ||= {}
