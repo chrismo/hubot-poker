@@ -11,14 +11,12 @@ module.exports = class Dealer
     @dealerStore = @store.tokenPoker[@id] ||= {}
     @gameClasses ||= [ReverseHoldEm, PileMeister, Stockpile]
     @currentGameClass = @gameClasses[0]
-    @playCache = []
     @ais = []
     this.startNewGame()
 
   diagnostic: ->
     ["@gameClasses: #{(gameClass.name for gameClass in @gameClasses).join(',')}",
      "@id: #{@id}",
-     "@playCache: #{([play.player, play.playerHand] for play in @playCache).join(',')}",
      (if (@game && @game.diagnostic) then @game.diagnostic() else '')].join("\n")
 
   listGames: ->
@@ -42,48 +40,8 @@ module.exports = class Dealer
     @game.setListener(this)
     @game
 
-  play: (playerName, playerHand) ->
-    return unless @game.play
-
-    # TODO: need to push caching down into the game
-
-    if !@game.round.isStarted()
-      @game.vetPlayerForPlaying(playerName) if @game.vetPlayerForPlaying
-      @playCache.push {player: playerName, playerHand: playerHand}
-      if this.playersInPlayCache() > 1
-        results = []
-        while @playCache.length > 0
-          thisPlay = @playCache.shift()
-          results.push @game.play(thisPlay.player, thisPlay.playerHand)
-        results
-      else
-        "Need a second player to start the next round."
-    else
-      @game.play(playerName, playerHand)
-
-  playersInPlayCache: ->
-    players = (play.player for play in @playCache)
-    _.uniq(players).length
-
-  # TODO: need a dynamic way for a game to register its commands
-
-  bet: (playerName, bet) ->
-    @game.bet(playerName, bet) if @game.bet
-
-  call: (playerName) ->
-    @game.call(playerName) if @game.call
-
-  fold: (playerName) ->
-    @game.fold(playerName) if @game.fold
-
-  deal: (playerName, args...) ->
-    @game.deal(playerName, args) if @game.deal
-
-  break: (playerName, args...) ->
-    @game.break(playerName, args) if @game.break
-
-  fundPlayer: (playerName, amount) ->
-    @game.fundPlayer(playerName, amount) if @game.fundPlayer
+  sendToGame: (playerName, args) ->
+    @game.sendCommand(playerName, args)
 
   addAi: (playerName) ->
     ai = new AiPlayer(playerName, this)

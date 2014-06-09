@@ -43,6 +43,15 @@ module.exports = class ReverseHoldEm extends BaseGame
     (if @round.diagnostic then @round.diagnostic() else '') +
     (if @pot.diagnostic then @pot.diagnostic() else '')
 
+  commands: -> [
+    [/^((\d{6})|(\d{3} \d{3}))$/i, this.play],
+    [/^bet (\d+)$/i, this.bet],
+    [/^fold$/i, this.fold],
+    [/^call$/i, this.call],
+    [/^fund (\d+)$/i, this.fundPlayer],       9
+  ]
+
+  # TODO: need to cache players so game waits until 2
   play: (playerName, playerHand) ->
     this.vetPlayerForPlaying(playerName)
     this.ensureRoundStarted()

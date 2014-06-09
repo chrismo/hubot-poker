@@ -36,6 +36,11 @@ module.exports = class PileMeister extends BaseGame
   resetScores: ->
     @playerStore = []
 
+  commands: -> [
+    [/^deal ?(chain)?$/i, this.deal],
+    [/^break (\d+)$/i, this.break],
+  ]
+
   deal: (playerName, chain) ->
     chain = this.processOptArg(chain)
     this.ensureRoundStarted()

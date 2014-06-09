@@ -25,7 +25,7 @@ describe 'Dealer', ->
     result = dealer.getStatus()
     expect(result).toBe "game status"
 
-  it 'should allow admin to change the game', ->
+  it 'should change the game', ->
     dealer.changeGame('chrismo', 'loser')
     expect(dealer.game.constructor.name).toBe 'LoserWins'
 
@@ -38,8 +38,8 @@ describe 'Dealer', ->
   it 'should finishRound on the current game if new game is different', ->
     listener = new FakeListener
     dealer.setListener(listener)
-    dealer.play('chrismo', '123123')
-    dealer.play('romer', '123123')
+    dealer.sendToGame('chrismo', '123123')
+    dealer.sendToGame('romer', '123123')
     firstGame = dealer.game
     expect(firstGame.round.isStarted()).toBe true
 
@@ -49,8 +49,8 @@ describe 'Dealer', ->
     expect(listener.finishRound).toBe true
 
   it 'should do nothing if the requested game is already in play', ->
-    dealer.play('chrismo', '123123')
-    dealer.play('romer', '123123')
+    dealer.sendToGame('chrismo', '123123')
+    dealer.sendToGame('romer', '123123')
     firstGame = dealer.game
     expect(firstGame.round.isStarted()).toBe true
 
@@ -61,22 +61,23 @@ describe 'Dealer', ->
   it 'should listen to game events and push to its listener', ->
     listener = new FakeListener
     dealer.setListener(listener)
-    game = dealer.startNewGame()
+    game = dealer.game
     game.pushStatus('foobar')
     expect(listener.lastStatus).toBe 'foobar'
 
-  it 'should handle betting', ->
-    dealer.startNewGame()
-    res = dealer.bet('chrismo', '12')
+  it 'should handle a bet game command', ->
+    res = dealer.sendToGame('chrismo', 'bet 12')
     expect(res).toBe 'chrismo bet 12'
 
-  it 'should pass-through fund call to game', ->
-    dealer.startNewGame()
-    res = dealer.fundPlayer('chrismo', '12')
+  it 'should handle a second game command', ->
+    res = dealer.sendToGame('chrismo', 'fund 12')
     expect(res).toBe "chrismo funded 12"
 
+  it 'should handle a multiple argument command', ->
+    res = dealer.sendToGame('chrismo', 'many foo bar')
+    expect(res).toBe "chrismo foo bar"
+
   it 'should manage ai players', ->
-    dealer.startNewGame()
     dealer.addAi('foo')
     dealer.addAi('bar')
     expect(dealer.ais.length).toBe 2
@@ -88,30 +89,17 @@ describe 'Dealer', ->
     dealer.killAi('foo')
     expect(dealer.ais.length).toBe 0
 
-  it 'should hold first player plays on a new round until second player', ->
-    result = dealer.play('romer', '243243')
-    expect(result).toBe 'Need a second player to start the next round.'
-    result = dealer.play('romer', '555666')
-    expect(result).toBe 'Need a second player to start the next round.'
-    result = dealer.play('chrismo', '123123')
-    expect(result.join("\n")).toBe 'romer played 243243\nromer played 555666\nchrismo played 123123'
-    result = dealer.play('sara', '343434')
-    expect(result).toBe "sara played 343434"
-
-  it 'should ask the game to vet the player if it supports it', ->
-    dealer.currentGameClass = VetPlayerGame
-    dealer.startNewGame()
-    dealer.game.denyPlayerName = 'chrismo'
-    result = dealer.play('romer', '243243')
-    expect(result).toBe 'Need a second player to start the next round.'
-    expect(-> dealer.play('chrismo', '123123')).toThrow "No can do for chrismo"
-    result = dealer.play('romer', '243243')
-    expect(result).toBe 'Need a second player to start the next round.'
-
 
 class KillEmAll extends BaseGame
   constructor: ->
     @round = new Rounds.TimedRound(1)
+
+  commands: -> [
+    [/^(\d{6})$/i, this.play],
+    [/^bet (\d+)$/i, this.bet],
+    [/^fund (\d+)$/i, this.fundPlayer],
+    [/^many (\w+) (\w+)/i, this.manyArgumentCommand]
+  ]
 
   play: (player, hand) ->
     this.ensureRoundStarted()
@@ -123,21 +111,14 @@ class KillEmAll extends BaseGame
   fundPlayer: (player, amount) ->
     "#{player} funded #{amount}"
 
+  manyArgumentCommand: (player, one, two) ->
+    "#{player} #{one} #{two}"
+
   getStatus: ->
     "game status"
 
 
 class LoserWins extends BaseGame
-
-
-class VetPlayerGame extends BaseGame
-  constructor: (@denyPlayerName) ->
-    @round = new Rounds.TimedRound(1)
-
-  vetPlayerForPlaying: (playerName) ->
-    throw "No can do for #{playerName}" if playerName == @denyPlayerName
-
-  play: (@playerName, @playerHand) ->
 
 
 class FakeListener

@@ -21,6 +21,11 @@ module.exports = class BaseGame
     @matcher = new TokenPoker.HandMatcher(@registry)
     @randomProvider ||= new RandomProvider
 
+  sendCommand: (playerName, args) ->
+    for pair in this.commands()
+      if result = pair[0].exec(args)
+        return pair[1].call(this, playerName, result[1..]...)
+
   ensureRoundStarted: ->
     this.startRound() if !@round.isStarted()
 

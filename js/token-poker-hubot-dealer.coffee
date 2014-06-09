@@ -8,11 +8,6 @@
 #   TOKEN_POKER_ROOMS - Comma delimited room IDs
 #
 # Commands:
-#   <any 6 digits> - Play a hand of token poker.
-#   bet <digits>   - Bet points in token poker.
-#   deal [arg]     - Be dealt a token poker hand, with optional, game-specific arguments.
-#   call           - Match highest bet to stay in token poker game.
-#   fold           - Fold current hand in token poker game and forfeit any points bet.
 #   poker diag               - Diagnostic dump of current state.
 #   poker help               - Help instructions on current game.
 #   poker list games         - Show the current list of available games.
@@ -34,64 +29,21 @@ rooms = the_robot = null
 
 module.exports = (robot) ->
   the_robot = robot
+  foldListener = null
 
   robot.brain.on 'loaded', =>
     rooms = new Rooms.Rooms(dealerFactory)
     if process.env.TOKEN_POKER_ROOMS
       rooms.restrictToRooms(process.env.TOKEN_POKER_ROOMS.split(','))
 
-  robot.hear /^(\d{6}|\d{3} \d{3})+$/i, (msg) ->
+  # catch-all for game commands
+  robot.hear /.*/i, (msg) ->
     try
       dealer = currentDealer(msg)
-      result = dealer.play(msg.message.user.name, msg.message.text)
+      result = dealer.sendToGame(msg.message.user.name, msg.message.text)
       handleReply(msg, result)
     catch error
       msg.send error
-
-  robot.hear /^bet\b (\d+)$/i, (msg) ->
-    try
-      amount = msg.match[1]
-      dealer = currentDealer(msg)
-      result = dealer.bet(msg.message.user.name, amount)
-      handleReply(msg, result)
-    catch error
-      msg.send error
-
-  robot.hear /^fold$/i, (msg) ->
-    try
-      amount = msg.match[1]
-      dealer = currentDealer(msg)
-      result = dealer.fold(msg.message.user.name)
-      handleReply(msg, result)
-    catch error
-      msg.send error
-
-  robot.hear /^call$/i, (msg) ->
-    try
-      amount = msg.match[1]
-      dealer = currentDealer(msg)
-      result = dealer.call(msg.message.user.name)
-      handleReply(msg, result)
-    catch error
-      msg.send error
-
-  robot.hear /^deal\b ?(.*)$/i, (msg) ->
-    try
-      args = msg.match[1].split(' ')
-      dealer = currentDealer(msg)
-      result = dealer.deal(msg.message.user.name, args)
-      handleReply(msg, result)
-    catch error
-      msg.send error
-
-  #robot.hear /^break\b ?(.*)$/i, (msg) ->
-  #  try
-  #   args = msg.match[1].split(' ')
-  #    dealer = currentDealer(msg)
-  #    result = dealer.break(msg.message.user.name, args)
-  #    handleReply(msg, result)
-  #  catch error
-  #    msg.send error
 
   robot.hear /^poker help/i, (msg) ->
     try
@@ -135,7 +87,7 @@ module.exports = (robot) ->
         amount = parseInt(terms.shift())
         playerName = terms.join(' ')
         msg.send "setting #{playerName} points to #{amount}"
-        msg.send dealer.fundPlayer(playerName, amount)
+        msg.send dealer.sendToGame(playerName, amount)
       if /^ai/.test(command)
         action = terms.shift()
         playerName = terms.join(' ')

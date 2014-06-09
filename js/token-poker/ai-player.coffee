@@ -40,6 +40,7 @@ module.exports = class AiPlayer
       seconds = (Math.random() * 5) + 59
       that = this
       callback = this.doSomething
+      # TODO: fat arrow simplify this?
       setTimeout((-> (callback.call(that))), seconds * 1000)
 
   die: ->

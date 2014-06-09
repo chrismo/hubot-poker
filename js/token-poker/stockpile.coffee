@@ -27,6 +27,10 @@ module.exports = class Stockpile extends BaseGame
   resetScores: ->
     @scoreStorage = {}
 
+  commands: -> [
+    [/^((\d{6})|(\d{3} \d{3}))$/i, this.play]
+  ]
+
   play: (playerName, playerHand) ->
     this.ensureRoundStarted()
     result = new HandResult(playerName, @matcher.matchHighest(playerHand))
