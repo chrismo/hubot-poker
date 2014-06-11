@@ -155,6 +155,8 @@ module.exports = (robot) ->
     '' + msg.message.user.room
 
   currentDealer = (msg) ->
+    # TODO - DO NOT THROW ON THIS IF NOT ENABLED, JUST ROLL ON AND HAVE ALL COMMANDS IGNORE
+    # esp. a problem with convenient command regexs that don't require addressing hubot
     rooms.getDealerForRoom(currentRoom(msg))
 
   dealerFactory = (room) ->
