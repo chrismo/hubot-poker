@@ -27,18 +27,14 @@ describe 'Dealer', ->
     expect(result).toBe "game status"
 
   it 'should allow admin to change the game', ->
-    dealer.adminChangeGame('chrismo', 'loser')
+    dealer.changeGame('chrismo', 'loser')
     expect(dealer.game.constructor.name).toBe 'LoserWins'
 
   it 'should throw on change game when name is not found', ->
-    expect(-> dealer.adminChangeGame('chrismo', 'nope')).toThrow 'Cannot find a game matching <nope>'
+    expect(-> dealer.changeGame('chrismo', 'nope')).toThrow 'Cannot find a game matching <nope>'
 
   it 'should throw on change game when too many hits', ->
-    expect(-> dealer.adminChangeGame('chrismo', 'i')).toThrow 'Be more specific, more than one name matches <i>'
-
-  it 'should not allow non-admin to change the game', ->
-    expect(-> dealer.adminChangeGame('foobar',
-        'loser')).toThrow 'foobar is not an Admin. Only admins can change the game.'
+    expect(-> dealer.changeGame('chrismo', 'i')).toThrow 'Be more specific, more than one name matches <i>'
 
   it 'should finishRound on the current game if new game is different', ->
     listener = new FakeListener
@@ -48,7 +44,7 @@ describe 'Dealer', ->
     firstGame = dealer.game
     expect(firstGame.round.isStarted()).toBe true
 
-    dealer.adminChangeGame('chrismo', 'loser')
+    dealer.changeGame('chrismo', 'loser')
     expect(dealer.game.constructor.name).toBe 'LoserWins'
     expect(firstGame.round.isOver()).toBe true
     expect(listener.finishRound).toBe true
@@ -59,7 +55,7 @@ describe 'Dealer', ->
     firstGame = dealer.game
     expect(firstGame.round.isStarted()).toBe true
 
-    dealer.adminChangeGame('chrismo', 'kill')
+    dealer.changeGame('chrismo', 'kill')
     expect(firstGame.round.isOver()).toBe false
     expect(firstGame).toBe dealer.game
 

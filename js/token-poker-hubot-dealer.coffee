@@ -122,6 +122,7 @@ module.exports = (robot) ->
     catch error
       msg.send error
 
+  # TODO: optionally protect admin commands by list of admins
   robot.hear /^poker admin (.*)/i, (msg) ->
     try
       dealer = currentDealer(msg)
@@ -129,7 +130,7 @@ module.exports = (robot) ->
       command = terms.shift()
       if /^play/.test(command)
         gameName = terms.shift()
-        msg.send dealer.adminChangeGame(msg.message.user.name, gameName)
+        msg.send dealer.changeGame(msg.message.user.name, gameName)
       if /^fund/.test(command)
         amount = parseInt(terms.shift())
         playerName = terms.join(' ')

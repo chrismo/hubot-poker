@@ -41,9 +41,14 @@ module.exports = class Dealer
     @game.setListener(this)
     @game
 
+  # TODO: untangle this catch-22: startNewGame() being called within a game specific command.
+
   play: (playerName, playerHand) ->
     this.startNewGame() if not @game
     return unless @game.play
+
+    # TODO: need to push caching down into the game
+
     if !@game.round.isStarted()
       @game.vetPlayerForPlaying(playerName) if @game.vetPlayerForPlaying
       @playCache.push {player: playerName, playerHand: playerHand}
@@ -109,9 +114,7 @@ module.exports = class Dealer
   onFinishRound: ->
     @listener.onFinishRound() if @listener
 
-  # TODO: allow anyone to change game if a current game is not active
-  adminChangeGame: (name, newGameName) ->
-    this.checkIsAdmin(name)
+  changeGame: (name, newGameName) ->
     re = new RegExp(newGameName, 'i')
     hits = (gameClass for gameClass in @gameClasses when gameClass.name.match(re))
     switch
@@ -128,12 +131,5 @@ module.exports = class Dealer
           "New game of #{this.toListName(newGameClass)} started."
         else
           "We're already playing #{this.toListName(@currentGameClass)}"
-
-
-  # TODO: move admin functions up to hubot instead of coupled inside the game?
-  checkIsAdmin: (name) ->
-    admins = ['chrismo', 'Shell']
-    unless _.contains(admins, name)
-      throw "#{name} is not an Admin. Only admins can change the game."
 
   setListener: (@listener) ->
