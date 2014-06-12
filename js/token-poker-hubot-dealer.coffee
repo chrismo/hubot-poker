@@ -40,7 +40,7 @@ module.exports = (robot) ->
     if process.env.TOKEN_POKER_ROOMS
       rooms.restrictToRooms(process.env.TOKEN_POKER_ROOMS.split(','))
 
-  robot.hear /^(\d| )+$/i, (msg) ->
+  robot.hear /^(\d{6}|\d{3} \d{3})+$/i, (msg) ->
     try
       dealer = currentDealer(msg)
       result = dealer.play(msg.message.user.name, msg.message.text)
@@ -48,7 +48,7 @@ module.exports = (robot) ->
     catch error
       msg.send error
 
-  robot.hear /^bet (\d+)$/i, (msg) ->
+  robot.hear /^bet\b (\d+)$/i, (msg) ->
     try
       amount = msg.match[1]
       dealer = currentDealer(msg)
@@ -75,7 +75,7 @@ module.exports = (robot) ->
     catch error
       msg.send error
 
-  robot.hear /^deal ?(.*)$/i, (msg) ->
+  robot.hear /^deal\b ?(.*)$/i, (msg) ->
     try
       args = msg.match[1].split(' ')
       dealer = currentDealer(msg)
@@ -84,14 +84,14 @@ module.exports = (robot) ->
     catch error
       msg.send error
 
-  robot.hear /^break ?(.*)$/i, (msg) ->
-    try
-      args = msg.match[1].split(' ')
-      dealer = currentDealer(msg)
-      result = dealer.break(msg.message.user.name, args)
-      handleReply(msg, result)
-    catch error
-      msg.send error
+  #robot.hear /^break\b ?(.*)$/i, (msg) ->
+  #  try
+  #   args = msg.match[1].split(' ')
+  #    dealer = currentDealer(msg)
+  #    result = dealer.break(msg.message.user.name, args)
+  #    handleReply(msg, result)
+  #  catch error
+  #    msg.send error
 
   robot.hear /^poker help/i, (msg) ->
     try
