@@ -13,6 +13,7 @@ module.exports = class Dealer
     @currentGameClass = @gameClasses[0]
     @playCache = []
     @ais = []
+    this.startNewGame()
 
   diagnostic: ->
     ["@gameClasses: #{(gameClass.name for gameClass in @gameClasses).join(',')}",
@@ -41,10 +42,7 @@ module.exports = class Dealer
     @game.setListener(this)
     @game
 
-  # TODO: untangle this catch-22: startNewGame() being called within a game specific command.
-
   play: (playerName, playerHand) ->
-    this.startNewGame() if not @game
     return unless @game.play
 
     # TODO: need to push caching down into the game
@@ -70,27 +68,21 @@ module.exports = class Dealer
   # TODO: need a dynamic way for a game to register its commands
 
   bet: (playerName, bet) ->
-    this.startNewGame() if not @game
     @game.bet(playerName, bet) if @game.bet
 
   call: (playerName) ->
-    this.startNewGame() if not @game
     @game.call(playerName) if @game.call
 
   fold: (playerName) ->
-    this.startNewGame() if not @game
     @game.fold(playerName) if @game.fold
 
   deal: (playerName, args...) ->
-    this.startNewGame() if not @game
     @game.deal(playerName, args) if @game.deal
 
   break: (playerName, args...) ->
-    this.startNewGame() if not @game
     @game.break(playerName, args) if @game.break
 
   fundPlayer: (playerName, amount) ->
-    this.startNewGame() if not @game
     @game.fundPlayer(playerName, amount) if @game.fundPlayer
 
   addAi: (playerName) ->
@@ -105,7 +97,6 @@ module.exports = class Dealer
       @ais = _.without(@ais, ai)
 
   getStatus: ->
-    this.startNewGame() if not @game
     @game.getStatus()
 
   onStatus: (status) ->

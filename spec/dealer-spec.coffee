@@ -18,9 +18,8 @@ describe 'Dealer', ->
   it 'should default current to first in list', ->
     expect(dealer.currentGameClass).toBe KillEmAll
 
-  it 'should create a new game', ->
-    game = dealer.startNewGame()
-    expect(game.constructor.name).toBe 'KillEmAll'
+  it 'should start a new game by default', ->
+    expect(dealer.game.constructor.name).toBe 'KillEmAll'
 
   it 'should return status of current game', ->
     result = dealer.getStatus()
