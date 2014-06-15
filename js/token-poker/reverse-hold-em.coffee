@@ -1,5 +1,6 @@
 _ = require('underscore')
 BaseGame = require ('./base-game')
+GameCommand = require('./game-command')
 Player = require('./player')
 Pot = require('./pot')
 Rounds = require('./round')
@@ -44,11 +45,10 @@ module.exports = class ReverseHoldEm extends BaseGame
     (if @pot.diagnostic then @pot.diagnostic() else '')
 
   commands: -> [
-    [/^((\d{6})|(\d{3} \d{3}))$/i, this.play],
-    [/^bet (\d+)$/i, this.bet],
-    [/^fold$/i, this.fold],
-    [/^call$/i, this.call],
-    [/^fund (\d+)$/i, this.fundPlayer],       9
+    new GameCommand(/^((\d{6})|(\d{3} \d{3}))$/i, this.play, => (this.randomHand())),
+    new GameCommand(/^bet (\d+)$/i, this.bet, => ("bet #{this.randomProvider.randomInt(20)}")),
+    new GameCommand(/^fold$/i, this.fold, => ("fold")),
+    new GameCommand(/^call$/i, this.call, => ("call")),
   ]
 
   # TODO: need to cache players so game waits until 2

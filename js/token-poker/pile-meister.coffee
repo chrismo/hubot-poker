@@ -1,9 +1,10 @@
-TokenPoker = require('./core')
-BaseGame = require ('./base-game')
-Rounds = require('./round')
-PlayerHand = require('./player-hand')
-Player = require('./player')
 _ = require('underscore')
+BaseGame = require ('./base-game')
+GameCommand = require('./game-command')
+TokenPoker = require('./core')
+Player = require('./player')
+PlayerHand = require('./player-hand')
+Rounds = require('./round')
 
 module.exports = class PileMeister extends BaseGame
   @help: ->
@@ -37,8 +38,8 @@ module.exports = class PileMeister extends BaseGame
     @playerStore = []
 
   commands: -> [
-    [/^deal ?(chain)?$/i, this.deal],
-    [/^break (\d+)$/i, this.break],
+    (new GameCommand(/^deal ?(chain)?$/i, this.deal, => (["deal", "deal chain"][this.randomProvider.randomInt(2)]))),
+    (new GameCommand(/^break (\d+)$/i, this.break, => ("break #{this.randomProvider.randomInt(10)}")))
   ]
 
   deal: (playerName, chain) ->

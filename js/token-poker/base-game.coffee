@@ -1,3 +1,4 @@
+GameCommand = require('./game-command')
 TokenPoker = require('./core')
 _ = require('underscore')
 
@@ -22,9 +23,9 @@ module.exports = class BaseGame
     @randomProvider ||= new RandomProvider
 
   sendCommand: (playerName, args) ->
-    for pair in this.commands()
-      if result = pair[0].exec(args)
-        return pair[1].call(this, playerName, result[1..]...)
+    for command in this.commands()
+      if result = command.regexp.exec(args)
+        return command.callback.call(this, playerName, result[1..]...)
 
   ensureRoundStarted: ->
     this.startRound() if !@round.isStarted()
@@ -54,8 +55,10 @@ module.exports = class BaseGame
 
 class RandomProvider
   randomDigit: ->
-    # 0 - 9
-    Math.floor(Math.random() * 10)
+    this.randomInt(10)
+
+  randomInt: (max) ->
+    Math.floor(Math.random() * max)
 
 
 `

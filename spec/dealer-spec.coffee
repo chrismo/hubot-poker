@@ -1,5 +1,6 @@
-Dealer = require('../js/token-poker/dealer')
 BaseGame = require('../js/token-poker/base-game')
+Dealer = require('../js/token-poker/dealer')
+GameCommand = require('../js/token-poker/game-command')
 Rounds = require('../js/token-poker/round')
 
 describe 'Dealer', ->
@@ -95,10 +96,10 @@ class KillEmAll extends BaseGame
     @round = new Rounds.TimedRound(1)
 
   commands: -> [
-    [/^(\d{6})$/i, this.play],
-    [/^bet (\d+)$/i, this.bet],
-    [/^fund (\d+)$/i, this.fundPlayer],
-    [/^many (\w+) (\w+)/i, this.manyArgumentCommand]
+    new GameCommand(/^(\d{6})$/i, this.play),
+    new GameCommand(/^bet (\d+)$/i, this.bet),
+    new GameCommand(/^fund (\d+)$/i, this.fundPlayer),
+    new GameCommand(/^many (\w+) (\w+)/i, this.manyArgumentCommand)
   ]
 
   play: (player, hand) ->
