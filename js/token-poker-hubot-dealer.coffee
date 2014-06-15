@@ -87,7 +87,7 @@ module.exports = (robot) ->
         amount = parseInt(terms.shift())
         playerName = terms.join(' ')
         msg.send "setting #{playerName} points to #{amount}"
-        msg.send dealer.sendToGame(playerName, amount)
+        msg.send dealer.fundPlayer(playerName, amount)
       if /^ai/.test(command)
         action = terms.shift()
         playerName = terms.join(' ')

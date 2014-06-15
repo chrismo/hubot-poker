@@ -43,6 +43,9 @@ module.exports = class Dealer
   sendToGame: (playerName, args) ->
     @game.sendCommand(playerName, args)
 
+  fundPlayer: (playerName, amount) ->
+    @game.fundPlayer(playerName, amount) if @game.fundPlayer
+
   addAi: (playerName) ->
     ai = new AiPlayer(playerName, this)
     ai.doSomething(0)
