@@ -161,9 +161,20 @@ describe 'ReverseHoldEm', ->
     expect(game.vetPlayerForPlaying('chrismo')).toBe true
     game.play('chrismo', '112357')
     expect(game.playerStore[0].points).toBe 24
-    expect(game.vetPlayerForPlaying('chrismo')).toBe true
     game.playerStore[0].points = 0
     expect(-> game.vetPlayerForPlaying('chrismo')).toThrow "No dough, no show."
+
+  it 'should not allow a player to call deal twice', ->
+    game.deal('chrismo')
+    expect(-> (game.deal('chrismo'))).toThrow 'You already have a hand, chrismo'
+
+  it 'should not allow a player to call deal after play', ->
+    game.play('chrismo', '112233')
+    expect(-> (game.deal('chrismo'))).toThrow 'You already have a hand, chrismo'
+
+  it 'should not allow a player to call play after deal', ->
+    game.deal('chrismo')
+    expect(-> (game.play('chrismo', '112233'))).toThrow 'You already have a hand, chrismo'
 
   it 'should properly order hands with same matchCount', ->
     # 4-oak and 3 pair have the same matchCount, so we decide

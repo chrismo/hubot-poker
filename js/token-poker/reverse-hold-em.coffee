@@ -38,6 +38,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     @playerStartingPoints = 100
     this.setCache(2)
     @playCommand = new GameCommand(/^((\d{6})|(\d{3} \d{3}))$/i, this.play, => (this.randomHand()))
+    @dealCommand = new GameCommand(/^deal$/i, this.deal, => ("deal"))
     @betCommand = new GameCommand(/^bet (\d+)$/i, this.bet, => ("bet #{this.randomProvider.randomInt(20)}"))
     @foldCommand = new GameCommand(/^fold$/i, this.fold, => ("fold"))
     @callCommand = new GameCommand(/^call$/i, this.call, => ("call"))
@@ -51,6 +52,9 @@ module.exports = class ReverseHoldEm extends BaseGame
 
   commands: ->
     @playState.commands()
+
+  deal: (playerName) ->
+    this.play(playerName, this.randomHand())
 
   play: (playerName, playerHand) ->
     this.vetPlayerForPlaying(playerName)
@@ -82,6 +86,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     @playState.vetAction('play')
     player = this.getPlayerFromStore(playerName)
     throw "No dough, no show." if player && player.points == 0
+    throw "You already have a hand, #{playerName}" if this.isPlayerOnBoard(playerName)
     true
 
   vetPlayerForBetting: (playerName, betAction) ->
@@ -115,6 +120,9 @@ module.exports = class ReverseHoldEm extends BaseGame
   getPlayerFromStore: (playerName) ->
     _.find(@playerStore, (p) -> (p.name == playerName))
 
+  isPlayerOnBoard: (playerName) ->
+    @boardStore && @boardStore[playerName] != undefined
+
   pushBoard: ->
     this.pushStatus(this.showBoard())
 
@@ -142,7 +150,6 @@ module.exports = class ReverseHoldEm extends BaseGame
     @winningHandResult = this.handsInWinningOrder()[0]
     @pot.settleUp()
     @pot.goesTo(@winningHandResult.player) if @winningHandResult
-    # TODO: don't show instructions on win board
     this.pushStatus(this.showBoard())
     this.clearTimeouts()
     @playState = new HandsPlayState(this)
@@ -181,9 +188,11 @@ module.exports = class ReverseHoldEm extends BaseGame
       action = @playState.nextStateLabel()
       "#{action} In: #{remainingText}".rjust(width - title.length)
 
+    boardInstructions = if @round.isOver() then '' else @playState.boardInstructions()
+
     header = [
       "#{title}#{status}",
-      @playState.boardInstructions().center(width),
+      boardInstructions.center(width),
       "POT / ALL".rjust(width),
       ''
     ]
@@ -240,7 +249,7 @@ class HandsPlayState
     throw "You can't bet now." if action == 'bet'
 
   commands: ->
-    [ @game.playCommand ]
+    [ @game.playCommand, @game.dealCommand ]
 
 
 class BetPlayState
