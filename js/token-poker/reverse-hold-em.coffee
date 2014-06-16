@@ -73,7 +73,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     player = this.vetPlayerForBetting(playerName, 'fold')
     @pot.fold(player)
     @boardStore[player.name].folded = true
-    this.pushBoard() unless this.checkForLoneWinner()
+    this.pushBoard() unless this.checkForLoneWinner() || this.allBetsSettled()
     null
 
   call: (playerName) ->

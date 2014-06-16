@@ -167,6 +167,16 @@ describe 'ReverseHoldEm', ->
     game.call('woodall')
     expect(game.winningHandResult.playerName).toBe 'sara'
 
+  it 'should end during fold if remaining players have bet or called to same max', ->
+    game.play('woodall', '123456')
+    game.play('sara', '111222')
+    game.play('sam', '444 444')
+    game.startBetting()
+    game.bet('sara', '12')
+    game.call('woodall')
+    game.fold('sam')
+    expect(game.winningHandResult.playerName).toBe 'sara'
+
   it 'should not allow a player with no points to play', ->
     expect(game.playerStore.length).toBe 0
     expect(game.vetPlayerForPlaying('chrismo')).toBe true
