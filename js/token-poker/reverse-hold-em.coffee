@@ -52,7 +52,6 @@ module.exports = class ReverseHoldEm extends BaseGame
     new GameCommand(/^call$/i, this.call, => ("call")),
   ]
 
-  # TODO: need to cache players so game waits until 2
   play: (playerName, playerHand) ->
     this.vetPlayerForPlaying(playerName)
     this.ensureRoundStarted()
