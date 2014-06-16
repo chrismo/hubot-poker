@@ -141,6 +141,33 @@ describe 'Pot with ante', ->
     expect(b.points).toBe 5
     expect(c.points).toBe 15
 
+  it 'should say all bets settled if all bets are above ante and equal', ->
+    a = new FakePlayer(21, 'a')
+    b = new FakePlayer(21, 'b')
+    c = new FakePlayer(21, 'c')
+    pot.addPlayer(a)
+    pot.addPlayer(b)
+    pot.addPlayer(c)
+    expect(pot.allBetsSettled()).toBe false
+    pot.bet(a, '3')
+    expect(pot.allBetsSettled()).toBe false
+    pot.call(b)
+    expect(pot.allBetsSettled()).toBe false
+    pot.bet(c, '3')
+    expect(pot.allBetsSettled()).toBe true
+
+  it 'should say all bets settled when a player under max but all in', ->
+    a = new FakePlayer(21, 'a')
+    b = new FakePlayer(11, 'b')
+    c = new FakePlayer(21, 'c')
+    pot.addPlayer(a)
+    pot.addPlayer(b)
+    pot.addPlayer(c)
+    pot.bet(a, '21')
+    pot.call(b)
+    pot.bet(c, '21')
+    expect(pot.allBetsSettled()).toBe true
+
 
 class FakePlayer
   constructor: (@points, @name) ->

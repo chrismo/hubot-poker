@@ -71,3 +71,11 @@ module.exports = class Pot
     player.points -= amount
     player.totalBet += amount
     @points += amount
+
+  allBetsSettled: ->
+    maxAmount = this.maxBet()
+    result = maxAmount > @ante
+    for player in @players
+      owed = maxAmount - player.totalBet
+      result = false if owed > 0 && player.points > 0
+    result

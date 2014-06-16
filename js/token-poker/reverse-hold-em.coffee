@@ -66,7 +66,7 @@ module.exports = class ReverseHoldEm extends BaseGame
 
   bet: (playerName, bet) ->
     @pot.bet(this.vetPlayerForBetting(playerName, 'bet'), bet)
-    this.pushBoard()
+    this.pushBoard() unless this.allBetsSettled()
     null
 
   fold: (playerName) ->
@@ -78,7 +78,7 @@ module.exports = class ReverseHoldEm extends BaseGame
 
   call: (playerName) ->
     @pot.call(this.vetPlayerForBetting(playerName, 'call'))
-    this.pushBoard()
+    this.pushBoard() unless this.allBetsSettled()
     null
 
   vetPlayerForPlaying: (playerName) ->
@@ -102,6 +102,9 @@ module.exports = class ReverseHoldEm extends BaseGame
       true
     else
       false
+
+  allBetsSettled: ->
+    this.finishRound() if @pot.allBetsSettled()
 
   fundPlayer: (playerName, amount) ->
     player = this.getPlayerFromStore(playerName)

@@ -139,6 +139,7 @@ describe 'ReverseHoldEm', ->
 
   it 'should allow direct funding to a player', ->
     game.play('chrismo', '112357')
+    game.deal('sam')
     game.startBetting()
     game.bet('chrismo', '20')
     expect(game.playerStore[0].points).toBe 25 - 1 - 20
@@ -155,6 +156,16 @@ describe 'ReverseHoldEm', ->
     game.fold('chrismo')
     expect(game.boardStore.chrismo.folded).toBe true
     expect(game.winningHandResult.playerName).toBe 'romer'
+
+  it 'should end during betting if all players have bet or called to same max', ->
+    game.play('woodall', '123456')
+    game.play('sara', '111222')
+    game.startBetting()
+    expect(game.winningHandResult).toBe undefined
+    game.bet('sara', '12')
+    expect(game.winningHandResult).toBe undefined
+    game.call('woodall')
+    expect(game.winningHandResult.playerName).toBe 'sara'
 
   it 'should not allow a player with no points to play', ->
     expect(game.playerStore.length).toBe 0
