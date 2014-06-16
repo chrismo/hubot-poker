@@ -12,6 +12,7 @@ module.exports = class ReverseHoldEm extends BaseGame
       "Reverse Hold 'em",
       '',
       '<6 digits> - Enter a 6 digit token',
+      'deal       - Have hubot deal you a random hand',
       "bet [xx]   - When it's time to bet, optionally bet a number of points.",
       "call       - When it's time to bet or settle up, match your bet to the highest bet.",
       "fold       - When it's time to bet or settle up, fold your hand."
