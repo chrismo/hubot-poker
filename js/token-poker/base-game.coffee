@@ -30,6 +30,13 @@ module.exports = class BaseGame
   sendCommand: (playerName, args) ->
     try
       commandResults = []
+      # TODO: remove coupling into TimedRound class
+      # smell - because we're caching plays, but now can no longer just
+      # allow the Round instance to throw when it's too soon, so now
+      # the Game class is having to have Round knowledge - which is wrong.
+      # if we ever wanted a non-Timed round - this is wrong. We're
+      # screwing with the nature of things.
+      @round.throwIfNotRestartable() if @round.restartDelaySecondsLeft() > 0
       return if !this.matchedGameCommand(args)
       playerCommands = @playCache.sendCommand(playerName, args)
       this.ensureRoundStarted()

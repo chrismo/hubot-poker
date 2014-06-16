@@ -8,9 +8,12 @@ module.exports.TimedRound = class TimedRound
 
   start: ->
     return if this.isStarted()
-    throw "Next round starts in #{Math.floor(this.restartDelaySecondsLeft())} seconds." if !this.isRestartable()
+    this.throwIfNotRestartable()
     @startTime = @timeProvider.getTime()
     @endTime = undefined
+
+  throwIfNotRestartable: ->
+    throw "Next round starts in #{Math.floor(this.restartDelaySecondsLeft())} seconds." if !this.isRestartable()
 
   minutesLeft: ->
     @total - this.minutesExpired()

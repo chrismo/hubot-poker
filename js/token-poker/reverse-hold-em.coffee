@@ -37,6 +37,10 @@ module.exports = class ReverseHoldEm extends BaseGame
     @timeouts = []
     @playerStartingPoints = 100
     this.setCache(2)
+    @playCommand = new GameCommand(/^((\d{6})|(\d{3} \d{3}))$/i, this.play, => (this.randomHand()))
+    @betCommand = new GameCommand(/^bet (\d+)$/i, this.bet, => ("bet #{this.randomProvider.randomInt(20)}"))
+    @foldCommand = new GameCommand(/^fold$/i, this.fold, => ("fold"))
+    @callCommand = new GameCommand(/^call$/i, this.call, => ("call"))
 
   diagnostic: ->
     "\nReverseHoldEm\n\n" +
@@ -45,12 +49,8 @@ module.exports = class ReverseHoldEm extends BaseGame
     (if @round.diagnostic then @round.diagnostic() else '') +
     (if @pot.diagnostic then @pot.diagnostic() else '')
 
-  commands: -> [
-    new GameCommand(/^((\d{6})|(\d{3} \d{3}))$/i, this.play, => (this.randomHand())),
-    new GameCommand(/^bet (\d+)$/i, this.bet, => ("bet #{this.randomProvider.randomInt(20)}")),
-    new GameCommand(/^fold$/i, this.fold, => ("fold")),
-    new GameCommand(/^call$/i, this.call, => ("call")),
-  ]
+  commands: ->
+    @playState.commands()
 
   play: (playerName, playerHand) ->
     this.vetPlayerForPlaying(playerName)
@@ -239,6 +239,9 @@ class HandsPlayState
   vetAction: (action) ->
     throw "You can't bet now." if action == 'bet'
 
+  commands: ->
+    [ @game.playCommand ]
+
 
 class BetPlayState
   constructor: (@game) ->
@@ -258,6 +261,9 @@ class BetPlayState
 
   vetAction: (action, betAction) ->
     throw "Hands are locked" if action == 'play'
+
+  commands: ->
+    [ @game.betCommand, @game.foldCommand, @game.callCommand  ]
 
 
 class SettlePlayState
@@ -280,3 +286,6 @@ class SettlePlayState
   vetAction: (action, betAction) ->
     throw "Hands are locked." if action == 'play'
     throw "No new bets." if betAction == 'bet'
+
+  commands: ->
+    [ @game.foldCommand, @game.callCommand  ]
