@@ -4,6 +4,7 @@ BaseGame = require('../js/token-poker/base-game')
 Dealer = require('../js/token-poker/dealer')
 FakeRandom = require('./fake-random')
 GameCommand = require('../js/token-poker/game-command')
+Round = require('../js/token-poker/round')
 
 describe 'AiPlayer', ->
   dealer = null
@@ -50,6 +51,7 @@ class FakeGame extends BaseGame
   constructor: ->
     super
     @randomProvider = new FakeRandom
+    @round = new Round.TimedRound(1)
 
   commands: -> [
     new GameCommand(/(\d{6})/i, this.play, => ("123123")),

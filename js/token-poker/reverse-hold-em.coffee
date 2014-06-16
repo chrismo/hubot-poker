@@ -36,6 +36,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     @settleDuration = 0.5
     @timeouts = []
     @playerStartingPoints = 100
+    this.setCache(2)
 
   diagnostic: ->
     "\nReverseHoldEm\n\n" +

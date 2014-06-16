@@ -93,6 +93,7 @@ describe 'Dealer', ->
 
 class KillEmAll extends BaseGame
   constructor: ->
+    super
     @round = new Rounds.TimedRound(1)
 
   commands: -> [
