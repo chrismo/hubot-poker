@@ -272,7 +272,7 @@ class SettlePlayState
     @game.pushStatus ["No new bets. Time to settle up. ",
                       "Type 'call' to match the highest bid and stay in.",
                       "Type 'fold' to fold and forfeit anything bet already.",
-                      "* Doing nothing will automatically call *."].join("\n")
+                      "* Doing nothing will automatically call *"].join("\n")
 
   remainingMinutes: ->
     @game.round.minutesLeft()

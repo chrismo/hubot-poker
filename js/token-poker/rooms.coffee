@@ -5,8 +5,7 @@ module.exports.Rooms = class Rooms
   restrictToRooms: (@only) ->
 
   getDealerForRoom: (room) ->
-    if @only and room not in @only
-      throw 'No poker in this room.'
+    return if @only and room not in @only
 
     if @dealers[room]
       @dealers[room]

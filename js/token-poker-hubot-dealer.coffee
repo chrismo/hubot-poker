@@ -40,6 +40,7 @@ module.exports = (robot) ->
   robot.hear /.*/i, (msg) ->
     try
       dealer = currentDealer(msg)
+      return if !dealer
       result = dealer.sendToGame(msg.message.user.name, msg.message.text)
       handleReply(msg, result)
     catch error
@@ -48,6 +49,7 @@ module.exports = (robot) ->
   robot.hear /^poker help/i, (msg) ->
     try
       dealer = currentDealer(msg)
+      return if !dealer
       result = dealer.help()
       handleReply(msg, result)
     catch error
@@ -55,13 +57,16 @@ module.exports = (robot) ->
 
   robot.hear /^poker list games/i, (msg) ->
     try
-      msg.send currentDealer(msg).listGames().join("\n")
+      dealer = currentDealer(msg)
+      return if !dealer
+      msg.send dealer.listGames().join("\n")
     catch error
       msg.send error
 
   robot.hear /^poker (score|status|board|show)/i, (msg) ->
     try
       dealer = currentDealer(msg)
+      return if !dealer
       msg.send dealer.getStatus()
     catch error
       msg.send error
@@ -70,7 +75,9 @@ module.exports = (robot) ->
     try
       msg.send "Room: #{currentRoom(msg)}"
       msg.send "Only: #{rooms.only}"
-      msg.send currentDealer(msg).diagnostic()
+      dealer = currentDealer(msg)
+      return if !dealer
+      msg.send dealer.diagnostic()
     catch error
       msg.send error
 
@@ -78,6 +85,7 @@ module.exports = (robot) ->
   robot.hear /^poker admin (.*)/i, (msg) ->
     try
       dealer = currentDealer(msg)
+      return if !dealer
       terms = msg.match[1].split(' ')
       command = terms.shift()
       if /^play/.test(command)
@@ -108,8 +116,6 @@ module.exports = (robot) ->
     '' + msg.message.user.room
 
   currentDealer = (msg) ->
-    # TODO - DO NOT THROW ON THIS IF NOT ENABLED, JUST ROLL ON AND HAVE ALL COMMANDS IGNORE
-    # esp. a problem with convenient command regexs that don't require addressing hubot
     rooms.getDealerForRoom(currentRoom(msg))
 
   dealerFactory = (room) ->
