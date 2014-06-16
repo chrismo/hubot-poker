@@ -1,7 +1,8 @@
-TokenPoker = require('./core')
-BaseGame = require ('./base-game')
-Rounds = require('./round')
 _ = require('underscore')
+BaseGame = require ('./base-game')
+GameCommand = require('./game-command')
+Rounds = require('./round')
+TokenPoker = require('./core')
 
 module.exports = class Stockpile extends BaseGame
   @help: ->
@@ -26,6 +27,10 @@ module.exports = class Stockpile extends BaseGame
 
   resetScores: ->
     @scoreStorage = {}
+
+  commands: -> [
+    new GameCommand(/^((\d{6})|(\d{3} \d{3}))$/i, this.play, => (this.randomHand()))
+  ]
 
   play: (playerName, playerHand) ->
     this.ensureRoundStarted()

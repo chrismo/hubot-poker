@@ -1,5 +1,6 @@
 _ = require('underscore')
 BaseGame = require ('./base-game')
+GameCommand = require('./game-command')
 Player = require('./player')
 Pot = require('./pot')
 Rounds = require('./round')
@@ -35,6 +36,7 @@ module.exports = class ReverseHoldEm extends BaseGame
     @settleDuration = 0.5
     @timeouts = []
     @playerStartingPoints = 100
+    this.setCache(2)
 
   diagnostic: ->
     "\nReverseHoldEm\n\n" +
@@ -42,6 +44,13 @@ module.exports = class ReverseHoldEm extends BaseGame
     "@playerStore: #{([player.name, player.points] for player in @playerStore).join(',')}\n" +
     (if @round.diagnostic then @round.diagnostic() else '') +
     (if @pot.diagnostic then @pot.diagnostic() else '')
+
+  commands: -> [
+    new GameCommand(/^((\d{6})|(\d{3} \d{3}))$/i, this.play, => (this.randomHand())),
+    new GameCommand(/^bet (\d+)$/i, this.bet, => ("bet #{this.randomProvider.randomInt(20)}")),
+    new GameCommand(/^fold$/i, this.fold, => ("fold")),
+    new GameCommand(/^call$/i, this.call, => ("call")),
+  ]
 
   play: (playerName, playerHand) ->
     this.vetPlayerForPlaying(playerName)

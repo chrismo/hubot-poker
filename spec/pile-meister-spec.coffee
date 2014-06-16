@@ -1,7 +1,7 @@
-PileMeister = require('../js/token-poker/pile-meister')
 Fakes = require('./fake-time')
-Rounds = require('../js/token-poker/round')
 FakeRandom = require('./fake-random')
+PileMeister = require('../js/token-poker/pile-meister')
+Rounds = require('../js/token-poker/round')
 
 describe 'PileMeister', ->
   store = game = null
@@ -109,11 +109,11 @@ describe 'PileMeister', ->
     # decide to spend too many points to break the chain
     # yer still losing all those points.
     rand.pushFakeHand('112257', '112357')
-    game.deal('romer')
-    game.deal('chrismo', 'chain')
+    game.sendCommand('romer', 'deal')
+    game.sendCommand('chrismo', 'deal chain')
     expect(game.playerStore[0].points).toBe 4
     time.now = builder.withMinute(1).build()
-    game.break('romer', '4')
+    game.sendCommand('romer', 'break 4')
     expect(game.playerStore[0].points).toBe 0
     expect(game.playerStore[1].points).toBe 0
 

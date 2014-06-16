@@ -1,3 +1,4 @@
+GameCommand = require('./game-command')
 TokenPoker = require('./core')
 _ = require('underscore')
 
@@ -20,6 +21,35 @@ module.exports = class BaseGame
     ])
     @matcher = new TokenPoker.HandMatcher(@registry)
     @randomProvider ||= new RandomProvider
+
+    this.setCache(1)
+
+  setCache: (minimumPlayers) ->
+    @playCache = new PlayCache(this, minimumPlayers)
+
+  sendCommand: (playerName, args) ->
+    try
+      commandResults = []
+      return if !this.matchedGameCommand(args)
+      playerCommands = @playCache.sendCommand(playerName, args)
+      this.ensureRoundStarted()
+      for playerCommand in playerCommands
+        [result, gameCommand] = this.matchedGameCommand(playerCommand.args)
+        commandResults.push gameCommand.callback.call(this, playerCommand.playerName, result[1..]...)
+      switch
+        when commandResults.length > 1
+          commandResults
+        when commandResults.length == 1
+          commandResults[0]
+        else
+          undefined
+    catch error
+      error
+
+  matchedGameCommand: (args) ->
+    for gameCommand in this.commands()
+      if result = gameCommand.regexp.exec(args)
+        return [result, gameCommand]
 
   ensureRoundStarted: ->
     this.startRound() if !@round.isStarted()
@@ -49,9 +79,34 @@ module.exports = class BaseGame
 
 class RandomProvider
   randomDigit: ->
-    # 0 - 9
-    Math.floor(Math.random() * 10)
+    this.randomInt(10)
 
+  randomInt: (max) ->
+    Math.floor(Math.random() * max)
+
+
+class PlayCache
+  constructor: (@game, @minimumPlayers) ->
+    @playCache = []
+
+  sendCommand: (playerName, args) ->
+    @playCache.push {playerName: playerName, args: args}
+    if this.minimumHavePlayed()
+      results = []
+      while @playCache.length > 0
+        thisPlay = @playCache.shift()
+        results.push thisPlay
+      results
+    else
+      throw "Need #{@minimumPlayers} players to start the next round."
+
+  minimumHavePlayed: ->
+    @game.round.isStarted() ||
+      this.playersInPlayCache() >= @minimumPlayers
+
+  playersInPlayCache: ->
+    players = (play.playerName for play in @playCache)
+    _.uniq(players).length
 
 `
 // http://snipplr.com/view.php?codeview&id=709

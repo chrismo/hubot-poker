@@ -5,14 +5,6 @@ _ = require('underscore')
 # players in the hubot Shell adapter for exploratory testing.
 module.exports = class AiPlayer
   constructor: (@name, @dealer) ->
-    @functions = []
-    @functions.push (-> (@dealer.play(@name, this.randomHand()))) if @dealer.game.play
-    @functions.push (-> (@dealer.bet(@name, this.randomInt(20)))) if @dealer.game.bet
-    @functions.push (-> (@dealer.fold(@name))) if @dealer.game.fold
-    @functions.push (-> (@dealer.call(@name))) if @dealer.game.call
-    @functions.push (-> (@dealer.deal(@name, ['chain', undefined][this.randomInt(2)]))) if @dealer.game.deal
-    @functions.push (-> (@dealer.break(@name, this.randomInt(20)))) if @dealer.game.break
-
     @alive = true
     @limit = 20
     @actions = 0
@@ -27,23 +19,30 @@ module.exports = class AiPlayer
     this.die() if @actions > @limit
     return if not @alive
 
-    index = (Math.floor(Math.random() * @functions.length)) if index == undefined
+    index = (Math.floor(Math.random() * this.gameCommands().length)) if index == undefined
     try
       # console.log("#{@name} calling function index #{index}")
-      result = @functions[index].call(this)
+      commandText = this.gameCommands()[index].ai()
+      @dealer.onStatus("#{@name} #{commandText}")
+      result = @dealer.sendToGame(@name, commandText)
       for result in _.flatten([result])
         if result
           @dealer.onStatus(if result.toStatus then result.toStatus() else result)
+      result
     catch error
       @dealer.onStatus(error)
     finally
       seconds = (Math.random() * 5) + 59
       that = this
       callback = this.doSomething
+      # TODO: fat arrow simplify this?
       setTimeout((-> (callback.call(that))), seconds * 1000)
 
   die: ->
     @alive = false
+
+  gameCommands: ->
+    @dealer.game.commands()
 
   randomInt: (maxExclusive) ->
     Math.floor(Math.random() * maxExclusive)

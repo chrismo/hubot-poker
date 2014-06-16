@@ -1,5 +1,6 @@
-Dealer = require('../js/token-poker/dealer')
 BaseGame = require('../js/token-poker/base-game')
+Dealer = require('../js/token-poker/dealer')
+GameCommand = require('../js/token-poker/game-command')
 Rounds = require('../js/token-poker/round')
 
 describe 'Dealer', ->
@@ -18,70 +19,66 @@ describe 'Dealer', ->
   it 'should default current to first in list', ->
     expect(dealer.currentGameClass).toBe KillEmAll
 
-  it 'should create a new game', ->
-    game = dealer.startNewGame()
-    expect(game.constructor.name).toBe 'KillEmAll'
+  it 'should start a new game by default', ->
+    expect(dealer.game.constructor.name).toBe 'KillEmAll'
 
   it 'should return status of current game', ->
     result = dealer.getStatus()
     expect(result).toBe "game status"
 
-  it 'should allow admin to change the game', ->
-    dealer.adminChangeGame('chrismo', 'loser')
+  it 'should change the game', ->
+    dealer.changeGame('chrismo', 'loser')
     expect(dealer.game.constructor.name).toBe 'LoserWins'
 
   it 'should throw on change game when name is not found', ->
-    expect(-> dealer.adminChangeGame('chrismo', 'nope')).toThrow 'Cannot find a game matching <nope>'
+    expect(-> dealer.changeGame('chrismo', 'nope')).toThrow 'Cannot find a game matching <nope>'
 
   it 'should throw on change game when too many hits', ->
-    expect(-> dealer.adminChangeGame('chrismo', 'i')).toThrow 'Be more specific, more than one name matches <i>'
-
-  it 'should not allow non-admin to change the game', ->
-    expect(-> dealer.adminChangeGame('foobar',
-        'loser')).toThrow 'foobar is not an Admin. Only admins can change the game.'
+    expect(-> dealer.changeGame('chrismo', 'i')).toThrow 'Be more specific, more than one name matches <i>'
 
   it 'should finishRound on the current game if new game is different', ->
     listener = new FakeListener
     dealer.setListener(listener)
-    dealer.play('chrismo', '123123')
-    dealer.play('romer', '123123')
+    dealer.sendToGame('chrismo', '123123')
+    dealer.sendToGame('romer', '123123')
     firstGame = dealer.game
     expect(firstGame.round.isStarted()).toBe true
 
-    dealer.adminChangeGame('chrismo', 'loser')
+    dealer.changeGame('chrismo', 'loser')
     expect(dealer.game.constructor.name).toBe 'LoserWins'
     expect(firstGame.round.isOver()).toBe true
     expect(listener.finishRound).toBe true
 
   it 'should do nothing if the requested game is already in play', ->
-    dealer.play('chrismo', '123123')
-    dealer.play('romer', '123123')
+    dealer.sendToGame('chrismo', '123123')
+    dealer.sendToGame('romer', '123123')
     firstGame = dealer.game
     expect(firstGame.round.isStarted()).toBe true
 
-    dealer.adminChangeGame('chrismo', 'kill')
+    dealer.changeGame('chrismo', 'kill')
     expect(firstGame.round.isOver()).toBe false
     expect(firstGame).toBe dealer.game
 
   it 'should listen to game events and push to its listener', ->
     listener = new FakeListener
     dealer.setListener(listener)
-    game = dealer.startNewGame()
+    game = dealer.game
     game.pushStatus('foobar')
     expect(listener.lastStatus).toBe 'foobar'
 
-  it 'should handle betting', ->
-    dealer.startNewGame()
-    res = dealer.bet('chrismo', '12')
+  it 'should handle a bet game command', ->
+    res = dealer.sendToGame('chrismo', 'bet 12')
     expect(res).toBe 'chrismo bet 12'
 
-  it 'should pass-through fund call to game', ->
-    dealer.startNewGame()
-    res = dealer.fundPlayer('chrismo', '12')
+  it 'should handle a second game command', ->
+    res = dealer.sendToGame('chrismo', 'fund 12')
     expect(res).toBe "chrismo funded 12"
 
+  it 'should handle a multiple argument command', ->
+    res = dealer.sendToGame('chrismo', 'many foo bar')
+    expect(res).toBe "chrismo foo bar"
+
   it 'should manage ai players', ->
-    dealer.startNewGame()
     dealer.addAi('foo')
     dealer.addAi('bar')
     expect(dealer.ais.length).toBe 2
@@ -93,30 +90,18 @@ describe 'Dealer', ->
     dealer.killAi('foo')
     expect(dealer.ais.length).toBe 0
 
-  it 'should hold first player plays on a new round until second player', ->
-    result = dealer.play('romer', '243243')
-    expect(result).toBe 'Need a second player to start the next round.'
-    result = dealer.play('romer', '555666')
-    expect(result).toBe 'Need a second player to start the next round.'
-    result = dealer.play('chrismo', '123123')
-    expect(result.join("\n")).toBe 'romer played 243243\nromer played 555666\nchrismo played 123123'
-    result = dealer.play('sara', '343434')
-    expect(result).toBe "sara played 343434"
-
-  it 'should ask the game to vet the player if it supports it', ->
-    dealer.currentGameClass = VetPlayerGame
-    dealer.startNewGame()
-    dealer.game.denyPlayerName = 'chrismo'
-    result = dealer.play('romer', '243243')
-    expect(result).toBe 'Need a second player to start the next round.'
-    expect(-> dealer.play('chrismo', '123123')).toThrow "No can do for chrismo"
-    result = dealer.play('romer', '243243')
-    expect(result).toBe 'Need a second player to start the next round.'
-
 
 class KillEmAll extends BaseGame
   constructor: ->
+    super
     @round = new Rounds.TimedRound(1)
+
+  commands: -> [
+    new GameCommand(/^(\d{6})$/i, this.play),
+    new GameCommand(/^bet (\d+)$/i, this.bet),
+    new GameCommand(/^fund (\d+)$/i, this.fundPlayer),
+    new GameCommand(/^many (\w+) (\w+)/i, this.manyArgumentCommand)
+  ]
 
   play: (player, hand) ->
     this.ensureRoundStarted()
@@ -128,21 +113,14 @@ class KillEmAll extends BaseGame
   fundPlayer: (player, amount) ->
     "#{player} funded #{amount}"
 
+  manyArgumentCommand: (player, one, two) ->
+    "#{player} #{one} #{two}"
+
   getStatus: ->
     "game status"
 
 
 class LoserWins extends BaseGame
-
-
-class VetPlayerGame extends BaseGame
-  constructor: (@denyPlayerName) ->
-    @round = new Rounds.TimedRound(1)
-
-  vetPlayerForPlaying: (playerName) ->
-    throw "No can do for #{playerName}" if playerName == @denyPlayerName
-
-  play: (@playerName, @playerHand) ->
 
 
 class FakeListener
