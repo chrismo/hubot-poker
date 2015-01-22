@@ -8,6 +8,10 @@ module.exports = class AiPlayer
     @alive = true
     @limit = 20
     @actions = 0
+    @nextQueuedMsecs = null
+
+  diagnostic: () ->
+    "- #{@name}: @alive <#{@alive}>, @limit <#{@limit}>, @actions <#{@actions}>, @nextQueuedMsecs <#{@nextQueuedMsecs}>"
 
   randomHand: ->
     hand = []
@@ -32,11 +36,15 @@ module.exports = class AiPlayer
     catch error
       @dealer.onStatus(error)
     finally
-      seconds = (Math.random() * 5) + 59
-      that = this
-      callback = this.doSomething
-      # TODO: fat arrow simplify this?
-      setTimeout((-> (callback.call(that))), seconds * 1000)
+      seconds = (Math.random() * 30) + 30
+      this.queueSomething(seconds)
+
+  queueSomething: (seconds) ->
+    @nextQueuedMsecs = seconds * 1000
+    that = this
+    callback = this.doSomething
+    # TODO: fat arrow simplify this?
+    setTimeout((-> (callback.call(that))), @nextQueuedMsecs)
 
   die: ->
     @alive = false

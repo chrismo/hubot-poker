@@ -6,6 +6,7 @@ Pot = require('./pot')
 Rounds = require('./round')
 TokenPoker = require('./core')
 
+# TODO support separate Board and Score commands, so the board could be shown, but also overall players point list
 module.exports = class ReverseHoldEm extends BaseGame
   @help: ->
     [

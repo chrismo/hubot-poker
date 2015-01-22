@@ -17,6 +17,7 @@ module.exports = class Dealer
   diagnostic: ->
     ["@gameClasses: #{(gameClass.name for gameClass in @gameClasses).join(',')}",
      "@id: #{@id}",
+     "@ais: \n#{(ai.diagnostic() for ai in @ais).join("\n")}",
      (if (@game && @game.diagnostic) then @game.diagnostic() else '')].join("\n")
 
   listGames: ->
@@ -48,14 +49,18 @@ module.exports = class Dealer
 
   addAi: (playerName) ->
     ai = new AiPlayer(playerName, this)
-    ai.doSomething(0)
     @ais.push ai
+    ai
 
   killAi: (playerName) ->
     ai = _.find(@ais, (ai) -> (ai.name == playerName))
     if ai
       ai.die()
       @ais = _.without(@ais, ai)
+
+  killAllAis: () ->
+    ai.die() for ai in @ais
+    @ais = []
 
   getStatus: ->
     @game.getStatus()

@@ -27,6 +27,7 @@ Dealer = require('./token-poker/dealer')
 
 rooms = the_robot = null
 
+# TODO: package up this whole thing in npm
 module.exports = (robot) ->
   the_robot = robot
   foldListener = null
@@ -59,7 +60,7 @@ module.exports = (robot) ->
     try
       dealer = currentDealer(msg)
       return if !dealer
-      msg.send dealer.listGames().join("\n")
+      msg.send formatResponse(dealer.listGames().join("\n"))
     catch error
       msg.send error
 
@@ -67,17 +68,17 @@ module.exports = (robot) ->
     try
       dealer = currentDealer(msg)
       return if !dealer
-      msg.send dealer.getStatus()
+      msg.send formatResponse(dealer.getStatus())
     catch error
       msg.send error
 
   robot.hear /^poker diag/i, (msg) ->
     try
-      msg.send "Room: #{currentRoom(msg)}"
-      msg.send "Only: #{rooms.only}"
+      response = "Room: #{currentRoom(msg)}\nOnly: #{rooms.only}\n"
       dealer = currentDealer(msg)
-      return if !dealer
-      msg.send dealer.diagnostic()
+      if dealer
+        response = response + dealer.diagnostic()
+      msg.send formatResponse(response)
     catch error
       msg.send error
 
@@ -90,27 +91,51 @@ module.exports = (robot) ->
       command = terms.shift()
       if /^play/.test(command)
         gameName = terms.shift()
-        msg.send dealer.changeGame(msg.message.user.name, gameName)
+        msg.send formatResponse(dealer.changeGame(msg.message.user.name, gameName))
       if /^fund/.test(command)
         amount = parseInt(terms.shift())
         playerName = terms.join(' ')
-        msg.send "setting #{playerName} points to #{amount}"
-        msg.send dealer.fundPlayer(playerName, amount)
+        msg.send formatResponse("setting #{playerName} points to #{amount}")
+        msg.send formatResponse(dealer.fundPlayer(playerName, amount))
       if /^ai/.test(command)
         action = terms.shift()
         playerName = terms.join(' ')
         switch
           when action == 'add'
-            dealer.addAi(playerName)
+            added = []
+            if playerName == 'horde'
+              for name in ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel']
+                ai = dealer.addAi(name)
+                ai.queueSomething((Math.random() * 10))
+                added.push(name)
+            else
+              ai = dealer.addAi(playerName)
+              ai.doSomething(0)
+              added.push(playerName)
+
+            msg.send "Added #{added.join(', ')}"
           when action == 'kill'
-            dealer.killAi(playerName)
+            if playerName == 'all'
+              dealer.killAllAis()
+            else
+              dealer.killAi(playerName)
+
+            msg.send "Killed #{playerName}"
     catch error
-      msg.send error
+      console.log(error)
+      msg.send error.msg
 
   handleReply = (msg, result) ->
-    for result in _.flatten([result])
-      if result
-        msg.reply if result.toStatus then result.toStatus() else result
+    response = formatResponse(result)
+    msg.reply response if response?
+
+  formatResponse = (response) ->
+    for response in _.flatten([response])
+      if response?
+        text = if response.toStatus then response.toStatus() else response
+        return if text.indexOf("\n") > -1 then "```\n#{text}\n```\n" else text
+      else
+        return null
 
   currentRoom = (msg) ->
     '' + msg.message.user.room
@@ -127,6 +152,6 @@ class GameListener
   constructor: (@robot, @room) ->
 
   onStatus: (text) ->
-    @robot.messageRoom @room, text
+    @robot.messageRoom @room, "```\n#{text}\n```\n"
 
   onFinishRound: ->

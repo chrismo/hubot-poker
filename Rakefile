@@ -18,6 +18,6 @@ CLEAN.clear
 CLEAN << Rake::FileList['spec/*.js']
 
 task :deploy do
-  FileUtils.cp(Dir['./js/token-poker-hubot-dealer.coffee'], '../hungrybot/scripts', verbose: true)
-  FileUtils.cp(Dir['./js/token-poker/*.coffee'], '../hungrybot/scripts/token-poker', verbose: true)
+  FileUtils.cp(Dir['./js/token-poker-hubot-dealer.coffee'], '../gamebot/scripts', verbose: true)
+  FileUtils.cp(Dir['./js/token-poker/*.coffee'], '../gamebot/scripts/token-poker', verbose: true)
 end
