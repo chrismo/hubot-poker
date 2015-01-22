@@ -84,6 +84,7 @@ module.exports = (robot) ->
 
   # TODO: optionally protect admin commands by list of admins
   robot.hear /^poker admin (.*)/i, (msg) ->
+    # OMG - It's like I'm trying to kill Uncle Bob with this code.
     try
       dealer = currentDealer(msg)
       return if !dealer
