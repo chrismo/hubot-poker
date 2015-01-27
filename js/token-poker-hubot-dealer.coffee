@@ -146,7 +146,7 @@ module.exports = (robot) ->
 
   dealerFactory = (room) ->
     dealer = new Dealer(the_robot.brain.data, room)
-    dealer.setListener(new GameListener(the_robot, room))
+    dealer.addListener(new GameListener(the_robot, room))
     dealer
 
 class GameListener
@@ -154,5 +154,7 @@ class GameListener
 
   onStatus: (text) ->
     @robot.messageRoom @room, "```\n#{text}\n```\n"
+
+  onStartRound: ->
 
   onFinishRound: ->

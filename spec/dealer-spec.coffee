@@ -38,7 +38,7 @@ describe 'Dealer', ->
 
   it 'should finishRound on the current game if new game is different', ->
     listener = new FakeListener
-    dealer.setListener(listener)
+    dealer.addListener(listener)
     dealer.sendToGame('chrismo', '123123')
     dealer.sendToGame('romer', '123123')
     firstGame = dealer.game
@@ -61,7 +61,7 @@ describe 'Dealer', ->
 
   it 'should listen to game events and push to its listener', ->
     listener = new FakeListener
-    dealer.setListener(listener)
+    dealer.addListener(listener)
     game = dealer.game
     game.pushStatus('foobar')
     expect(listener.lastStatus).toBe 'foobar'
@@ -125,5 +125,7 @@ class LoserWins extends BaseGame
 
 class FakeListener
   onStatus: (@lastStatus) ->
+  onStartRound: ->
+    @startRound = true
   onFinishRound: ->
     @finishRound = true

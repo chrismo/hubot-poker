@@ -12,6 +12,7 @@ module.exports = class Dealer
     @gameClasses ||= [ReverseHoldEm, PileMeister, Stockpile]
     @currentGameClass = @gameClasses[0]
     @ais = []
+    @listeners = []
     this.startNewGame()
 
   diagnostic: ->
@@ -38,7 +39,7 @@ module.exports = class Dealer
     gameName = gameName[0] + gameName.substr(1)
     gameStore = (@dealerStore[gameName] ||= {})
     @game = new @currentGameClass(gameStore)
-    @game.setListener(this)
+    @game.addListener(this)
     @game
 
   sendToGame: (playerName, args) ->
@@ -66,10 +67,13 @@ module.exports = class Dealer
     @game.getStatus()
 
   onStatus: (status) ->
-    @listener.onStatus(status) if @listener
+    l.onStatus(status) for l in @listeners
+
+  onStartRound: ->
+    l.onStartRound() for l in @listeners
 
   onFinishRound: ->
-    @listener.onFinishRound() if @listener
+    l.onFinishRound() for l in @listeners
 
   changeGame: (name, newGameName) ->
     re = new RegExp(newGameName, 'i')
@@ -89,4 +93,5 @@ module.exports = class Dealer
         else
           "We're already playing #{this.toListName(@currentGameClass)}"
 
-  setListener: (@listener) ->
+  addListener: (listener) ->
+    @listeners.push(listener)

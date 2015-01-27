@@ -254,5 +254,7 @@ class FakeListener
   constructor: ->
     @msgs = []
 
+  onStartRound: ->
+
   onStatus: (msg) ->
     @msgs.push msg

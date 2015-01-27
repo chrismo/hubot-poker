@@ -22,6 +22,8 @@ module.exports = class BaseGame
     @matcher = new TokenPoker.HandMatcher(@registry)
     @randomProvider ||= new RandomProvider
 
+    @listeners = []
+
     this.setCache(1)
 
   setCache: (minimumPlayers) ->
@@ -62,12 +64,13 @@ module.exports = class BaseGame
     this.startRound() if !@round.isStarted()
 
   startRound: ->
+    l.onStartRound() for l in @listeners
     @round.start()
     this.setAlarms() if this.setAlarms
     @winner = undefined
 
   finishRound: ->
-    @listener.onFinishRound() if @listener
+    l.onFinishRound() for l in @listeners
     @round.end()
 
   randomDigit: ->
@@ -78,10 +81,14 @@ module.exports = class BaseGame
     _.times(6, (n) => (hand.push(this.randomDigit())))
     hand.join('')
 
-  setListener: (@listener) ->
+  setListener: (listener) ->
+    @listeners.push(listener)
+
+  addListener: (listener) ->
+    @listeners.push(listener)
 
   pushStatus: (text) ->
-    @listener.onStatus(text) if @listener
+    l.onStatus(text) for l in @listeners
 
 
 class RandomProvider

@@ -36,3 +36,34 @@ describe 'BaseGame', ->
     game.setCache(2)
     result = game.sendCommand('woodall', 'bar')
     expect(result).toBe undefined
+
+  # TODO: add event on sendCommand, so bots can be smarter.
+
+  it 'should notify listener of round start and end', ->
+    listener = new FakeListener()
+    game.setListener(listener)
+    game.startRound()
+    game.finishRound()
+    expect(listener.roundStarted).toBe true
+    expect(listener.roundOver).toBe true
+
+  it 'should notify listener of status', ->
+    listener = new FakeListener()
+    game.setListener(listener)
+    game.pushStatus('text')
+    expect(listener.msgs[0]).toBe 'text'
+
+
+class FakeListener
+  constructor: ->
+    @msgs = []
+
+  onStatus: (msg) ->
+    @msgs.push msg
+
+  onStartRound: () ->
+    @roundStarted = true
+
+  onFinishRound: () ->
+    @roundOver = true
+

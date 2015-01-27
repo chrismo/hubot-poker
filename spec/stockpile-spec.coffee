@@ -106,4 +106,5 @@ describe 'Stockpile', ->
 
 class FakeListener
   onStatus: (@scoreboardText) ->
+  onStartRound: ->
   onFinishRound: ->
