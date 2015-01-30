@@ -1,12 +1,12 @@
 _ = require('underscore')
-BaseGame = require ('./base-game')
+Game = require ('./base-game')
 GameCommand = require('./game-command')
 TokenPoker = require('./core')
 Player = require('./player')
 PlayerHand = require('./player-hand')
 Rounds = require('./round')
 
-module.exports = class PileMeister extends BaseGame
+module.exports = class PileMeister extends Game.BaseGame
   @help: ->
     [
       'PileMeister - accumulate as many points by end of round.',

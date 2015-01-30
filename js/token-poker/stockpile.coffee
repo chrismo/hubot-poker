@@ -1,10 +1,10 @@
 _ = require('underscore')
-BaseGame = require ('./base-game')
+Game = require ('./base-game')
 GameCommand = require('./game-command')
 Rounds = require('./round')
 TokenPoker = require('./core')
 
-module.exports = class Stockpile extends BaseGame
+module.exports = class Stockpile extends Game.BaseGame
   @help: ->
     [
       'Stockpile - accumulate as many points by end of round.',

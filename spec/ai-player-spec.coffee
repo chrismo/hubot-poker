@@ -1,6 +1,6 @@
 _ = require('underscore')
 AiPlayer = require('../js/token-poker/ai-player')
-BaseGame = require('../js/token-poker/base-game')
+Game = require('../js/token-poker/base-game')
 Dealer = require('../js/token-poker/dealer')
 FakeRandom = require('./fake-random')
 GameCommand = require('../js/token-poker/game-command')
@@ -47,7 +47,7 @@ describe 'AiPlayer', ->
     expect(ai.alive).toBe false
 
 
-class FakeGame extends BaseGame
+class FakeGame extends Game.BaseGame
   constructor: ->
     super
     @randomProvider = new FakeRandom

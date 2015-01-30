@@ -1,4 +1,4 @@
-BaseGame = require('../js/token-poker/base-game')
+Game = require('../js/token-poker/base-game')
 Dealer = require('../js/token-poker/dealer')
 GameCommand = require('../js/token-poker/game-command')
 Rounds = require('../js/token-poker/round')
@@ -91,7 +91,7 @@ describe 'Dealer', ->
     expect(dealer.ais.length).toBe 0
 
 
-class KillEmAll extends BaseGame
+class KillEmAll extends Game.BaseGame
   constructor: ->
     super
     @round = new Rounds.TimedRound(1)
@@ -120,7 +120,7 @@ class KillEmAll extends BaseGame
     "game status"
 
 
-class LoserWins extends BaseGame
+class LoserWins extends Game.BaseGame
 
 
 class FakeListener

@@ -1,5 +1,5 @@
 _ = require('underscore')
-BaseGame = require ('./base-game')
+Game = require ('./base-game')
 GameCommand = require('./game-command')
 Player = require('./player')
 Pot = require('./pot')
@@ -7,7 +7,7 @@ Rounds = require('./round')
 TokenPoker = require('./core')
 
 # TODO support separate Board and Score commands, so the board could be shown, but also overall players point list
-module.exports = class ReverseHoldEm extends BaseGame
+module.exports = class ReverseHoldEm extends Game.BaseGame
   @help: ->
     [
       "Reverse Hold 'em",
@@ -33,12 +33,12 @@ module.exports = class ReverseHoldEm extends BaseGame
     @playState = new HandsPlayState(this)
     @pot = new Pot(1)
     # there's a smell around these durations and the play state classes.
-    # there's a more elegant way to string these together, i can feel it
+    # there's a more elegant way to string these together, i can feel it.
+    # They're much like Rounds.
     @betDuration = 0.5
     @settleDuration = 0.5
     @timeouts = []
     @playerStartingPoints = 100
-    this.setCache(2)
     @playCommand = new GameCommand(/^((\d{6})|(\d{3} \d{3}))$/i, this.play, => (this.randomHand()))
     @dealCommand = new GameCommand(/^deal$/i, this.deal, => ("deal"))
     @betCommand = new GameCommand(/^bet (\d+)$/i, this.bet, => ("bet #{this.randomProvider.randomInt(20)}"))

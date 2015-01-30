@@ -1,4 +1,6 @@
+GameCommand = require('../js/token-poker/game-command')
 TokenPoker = require('../js/token-poker/round')
+Games = require('../js/token-poker/base-game')
 Fakes = require('./fake-time')
 
 describe 'TimedRound', ->
@@ -110,6 +112,47 @@ describe 'TimedRound', ->
 
   it 'should not worry about midnight across a month change cuz dang', ->
     # life too short it is
+
+describe 'WaitForPlayersRound', ->
+  round = game = null
+
+  beforeEach ->
+    round = new TokenPoker.WaitForPlayerRound
+    game = new Games.BaseGame({}, round)
+    game.deal = -> return 'dealt'
+    game.commands = ->
+      [(new GameCommand(/^deal$/i, game.deal))]
+    game.addListener(round)
+
+  it 'should default to 2 minimum players', ->
+    expect(round.minimumPlayers).toBe 2
+
+  it 'should end when minimum players have played', ->
+    expect(round.isStarted()).toBe false
+    expect(round.isOver()).toBe false
+    expect(round.isRestartable()).toBe true
+
+    game.sendCommand('glv', 'deal')
+    expect(round.playersPlayed[0]).toBe 'glv'
+    expect(round.isStarted()).toBe true
+    expect(round.isOver()).toBe false
+    expect(round.isRestartable()).toBe false
+
+    game.sendCommand('sara', 'deal')
+    expect(round.playersPlayed.length).toBe 2
+    expect(round.isStarted()).toBe false
+    expect(round.isOver()).toBe true
+    expect(round.isRestartable()).toBe true
+
+
+  it 'should not count same player multiple times', ->
+    game.sendCommand('glv', 'deal')
+    game.sendCommand('glv', 'deal')
+    expect(round.playersPlayed.length).toBe 1
+
+
+describe 'GameRound', ->
+  it 'should manage a list of other rounds'
 
 
 class FakeReceiver

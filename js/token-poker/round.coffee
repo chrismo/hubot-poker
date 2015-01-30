@@ -1,14 +1,33 @@
+class Round
+  start: ->
+    return if this.isStarted()
+    this.throwIfNotRestartable()
+
+  throwIfNotRestartable: ->
+    throw "Round not restartable" if !this.isRestartable()
+
+  end: ->
+
+  isStarted: ->
+    throw "Subclass should implement"
+
+  isOver: ->
+    throw "Subclass should implement"
+
+  isRestartable: ->
+    throw "Subclass should implement"
+
+
 # this class is getting ridiculous, with its 3 states:
 # isStarted(), isOver(), isRestartable() -- at least implementation-wise.
 # Waaay too much boolean Jenga
-module.exports.TimedRound = class TimedRound
+module.exports.TimedRound = class TimedRound extends Round
   constructor: (@total, @timeProvider) ->
     @timeProvider ||= new TimeProvider
     @restartDelayInSeconds = 10
 
   start: ->
-    return if this.isStarted()
-    this.throwIfNotRestartable()
+    super
     @startTime = @timeProvider.getTime()
     @endTime = undefined
 
@@ -44,6 +63,7 @@ module.exports.TimedRound = class TimedRound
     @timeProvider.setTimeout((-> (callback.call(callbackThis))), delayInMsecs)
 
   end: ->
+    super
     @endTime = this.now()
     @startTime = undefined
 
@@ -56,9 +76,30 @@ module.exports.TimedRound = class TimedRound
   restartDelaySecondsLeft: ->
     @restartDelayInSeconds - ((this.now() - @endTime) / 1000)
 
+
 class TimeProvider
   getTime: ->
     new Date()
 
   setTimeout: (callback, delayInMsecs) ->
     setTimeout(callback, delayInMsecs)
+
+
+module.exports.WaitForPlayerRound = class WaitForPlayerRound extends Round
+  constructor: (@minimumPlayers=2) ->
+    @playersPlayed = []
+
+  isStarted: ->
+    @playersPlayed.length > 0 && @playersPlayed.length < @minimumPlayers
+
+  isOver: ->
+    @playersPlayed.length >= @minimumPlayers
+
+  isRestartable: ->
+    (!this.isStarted() && !this.isOver()) || this.isOver()
+
+  onGameCommand: (playerCommand, parsedCommand, commandResult) ->
+    playerName = playerCommand.playerName
+    if (@playersPlayed.indexOf(playerName) == -1)
+      @playersPlayed.push(playerName)
+

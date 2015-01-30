@@ -2,7 +2,7 @@ GameCommand = require('./game-command')
 TokenPoker = require('./core')
 _ = require('underscore')
 
-module.exports = class BaseGame
+module.exports.BaseGame = class BaseGame
   constructor: (@store, @round) ->
     @registry = new TokenPoker.HandRegistry([
       new TokenPoker.GroupedHand('Six of a Kind', '6', 10),
@@ -24,53 +24,35 @@ module.exports = class BaseGame
 
     @listeners = []
 
-    this.setCache(1)
-
-  setCache: (minimumPlayers) ->
-    @playCache = new PlayCache(this, minimumPlayers)
-
   sendCommand: (playerName, args) ->
     try
-      commandResults = []
       return if !this.matchedGameCommand(args)
-      # TODO: remove coupling into TimedRound class
-      # smell - because we're caching plays, but now can no longer just
-      # allow the Round instance to throw when it's too soon, so now
-      # the Game class is having to have Round knowledge - which is wrong.
-      # if we ever wanted a non-Timed round - this is wrong. We're
-      # screwing with the nature of things.
-      @round.throwIfNotRestartable() if @round.restartDelaySecondsLeft() > 0
-      playerCommands = @playCache.sendCommand(playerName, args)
       this.ensureRoundStarted()
-      for playerCommand in playerCommands
-        [result, gameCommand] = this.matchedGameCommand(playerCommand.args)
-        commandResults.push gameCommand.callback.call(this, playerCommand.playerName, result[1..]...)
-      switch
-        when commandResults.length > 1
-          commandResults
-        when commandResults.length == 1
-          commandResults[0]
-        else
-          undefined
+      playerCommand = {playerName: playerName, args: args}
+      parsedCommand = this.matchedGameCommand(playerCommand.args)
+      commandResult = parsedCommand.callback.call(this, playerCommand.playerName, parsedCommand.parsedArgs[1..]...)
+      (l.onGameCommand(playerCommand, parsedCommand, commandResult) if l.onGameCommand) for l in @listeners
+      commandResult
     catch error
       error
 
   matchedGameCommand: (args) ->
     for gameCommand in this.commands()
-      if result = gameCommand.regexp.exec(args)
-        return [result, gameCommand]
+      parsed = gameCommand.execute(args)
+      return parsed if parsed
 
   ensureRoundStarted: ->
     this.startRound() if !@round.isStarted()
 
   startRound: ->
-    l.onStartRound() for l in @listeners
+    (l.onStartRound() if l.onStartRound) for l in @listeners
     @round.start()
+    # TODO: make subclass game get this as a listener to remove this hack
     this.setAlarms() if this.setAlarms
     @winner = undefined
 
   finishRound: ->
-    l.onFinishRound() for l in @listeners
+    (l.onFinishRound() if l.onFinishRound) for l in @listeners
     @round.end()
 
   randomDigit: ->
@@ -88,7 +70,7 @@ module.exports = class BaseGame
     @listeners.push(listener)
 
   pushStatus: (text) ->
-    l.onStatus(text) for l in @listeners
+    (l.onStatus(text) if l.onStatus) for l in @listeners
 
 
 class RandomProvider
