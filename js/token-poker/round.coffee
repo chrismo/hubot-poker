@@ -85,7 +85,7 @@ class TimeProvider
     setTimeout(callback, delayInMsecs)
 
 
-module.exports.WaitForPlayerRound = class WaitForPlayerRound extends Round
+module.exports.WaitForPlayersRound = class WaitForPlayersRound extends Round
   constructor: (@minimumPlayers=2) ->
     @playersPlayed = []
 

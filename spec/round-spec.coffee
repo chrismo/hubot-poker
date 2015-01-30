@@ -117,7 +117,7 @@ describe 'WaitForPlayersRound', ->
   round = game = null
 
   beforeEach ->
-    round = new TokenPoker.WaitForPlayerRound
+    round = new TokenPoker.WaitForPlayersRound
     game = new Games.BaseGame({}, round)
     game.deal = -> return 'dealt'
     game.commands = ->
