@@ -47,7 +47,7 @@ module.exports.BaseGame = class BaseGame
   startRound: ->
     (l.onStartRound() if l.onStartRound) for l in @listeners
     @round.start()
-    # TODO: make subclass game get this as a listener to remove this hack
+    # TODO: make subclass game get this as a listener to remove this hack - is it a hack?
     this.setAlarms() if this.setAlarms
     @winner = undefined
 

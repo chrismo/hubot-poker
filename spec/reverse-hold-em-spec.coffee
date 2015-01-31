@@ -11,8 +11,8 @@ describe 'ReverseHoldEm', ->
     store = {}
     builder = new Fakes.TimeBuilder().withHour(1).withMinute(0).withSecond(0)
     time = new Fakes.FakeTimeProvider(builder.build())
-    round = new Rounds.TimedRound(2, time)
-    game = new ReverseHoldEm(store, round)
+    game = new ReverseHoldEm(store, time)
+    round = game.round
     game.playerStartingPoints = 25
 
   it 'basic gameplay with play, bet and settle rounds', ->
@@ -120,8 +120,7 @@ describe 'ReverseHoldEm', ->
     chrismo.points = 45
     expect(game.pot.players.length).toBe 1
 
-    newRound = new Rounds.TimedRound(2, time)
-    game = new ReverseHoldEm(store, newRound)
+    game = new ReverseHoldEm(store, time)
     expect(game.playerStore[0].name).toBe 'chrismo'
     expect(game.playerStore[0].points).toBe 45
     game.play('chrismo', '112357')
@@ -205,7 +204,7 @@ describe 'ReverseHoldEm', ->
     game.play('chrismo', '443322')
     expect(game.handsInWinningOrder()[0].playerName).toBe 'chrismo'
 
-  it 'needs real hands comparison' #, ->
+  it 'needs real hands comparison', ->
     # this incorrectly gives the win to woodall because sorted
     # the hands are 966555 and 666551. So, a bit of wishful
     # thinking with last night's commit.

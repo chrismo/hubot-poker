@@ -16,6 +16,9 @@ end
 # going to leave them be and clean my js files up here.
 CLEAN.clear
 CLEAN << Rake::FileList['spec/*.js']
+CLEAN << Rake::FileList['spec/*.map']
+CLEAN << Rake::FileList['js/**/*.js']
+CLEAN << Rake::FileList['js/**/*.map']
 
 task :deploy do
   FileUtils.cp(Dir['./js/token-poker-hubot-dealer.coffee'], '../gamebot/scripts', verbose: true)

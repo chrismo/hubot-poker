@@ -26,10 +26,11 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
       "hand wins. If you do not fold, you will automatically call the highest bet."
     ].join("\n")
 
-  constructor: (@store, @round) ->
+  constructor: (@store, @time) ->
     super(@store, @round)
     @playerStore = @store.playerStore ||= []
-    @round ||= new Rounds.TimedRound(2)
+    @time ||= new Rounds.TimeProvider
+    @round = new Rounds.TimedRound(2, @time)
     @playState = new HandsPlayState(this)
     @pot = new Pot(1)
     # there's a smell around these durations and the play state classes.

@@ -1,5 +1,5 @@
 GameCommand = require('../js/token-poker/game-command')
-TokenPoker = require('../js/token-poker/round')
+Rounds = require('../js/token-poker/round')
 Games = require('../js/token-poker/base-game')
 Fakes = require('./fake-time')
 
@@ -9,7 +9,7 @@ describe 'TimedRound', ->
   beforeEach ->
     builder = new Fakes.TimeBuilder().withHour(1).withMinute(0).withSecond(0)
     time = new Fakes.FakeTimeProvider(builder.build())
-    round = new TokenPoker.TimedRound(10, time)
+    round = new Rounds.TimedRound(10, time)
 
   it 'should have total minutes left before start', ->
     expect(round.isOver()).toBe false
@@ -86,7 +86,7 @@ describe 'TimedRound', ->
   it 'should reliably handle time math across hours', ->
     builder = new Fakes.TimeBuilder().withHour(3).withMinute(10).withSecond(0)
     time = new Fakes.FakeTimeProvider(builder.build())
-    round = new TokenPoker.TimedRound(120, time)
+    round = new Rounds.TimedRound(120, time)
     round.start()
     expect(round.minutesLeft()).toBe 120
     time.now = builder.withMinute(50).build()
@@ -100,7 +100,7 @@ describe 'TimedRound', ->
     # meh - prolly unlikely, but, let's try to think i18n-y
     builder = new Fakes.TimeBuilder().withDay(1).withHour(23).withMinute(10).withSecond(0)
     time = new Fakes.FakeTimeProvider(builder.build())
-    round = new TokenPoker.TimedRound(120, time)
+    round = new Rounds.TimedRound(120, time)
     round.start()
     expect(round.minutesLeft()).toBe 120
     time.now = builder.withMinute(50).build()
@@ -117,7 +117,7 @@ describe 'WaitForPlayersRound', ->
   round = game = null
 
   beforeEach ->
-    round = new TokenPoker.WaitForPlayersRound
+    round = new Rounds.WaitForPlayersRound
     game = new Games.BaseGame({}, round)
     game.deal = -> return 'dealt'
     game.commands = ->
@@ -149,10 +149,6 @@ describe 'WaitForPlayersRound', ->
     game.sendCommand('glv', 'deal')
     game.sendCommand('glv', 'deal')
     expect(round.playersPlayed.length).toBe 1
-
-
-describe 'GameRound', ->
-  it 'should manage a list of other rounds'
 
 
 class FakeReceiver

@@ -24,12 +24,14 @@ class Round
 module.exports.TimedRound = class TimedRound extends Round
   constructor: (@total, @timeProvider) ->
     @timeProvider ||= new TimeProvider
+    # TODO: restartDelay can just be another round instance, right?
     @restartDelayInSeconds = 10
 
   start: ->
     super
     @startTime = @timeProvider.getTime()
     @endTime = undefined
+    # this.setAlarm(0, this, this.end) <-- prolly need, but not yet
 
   throwIfNotRestartable: ->
     throw "Next round starts in #{Math.floor(this.restartDelaySecondsLeft())} seconds." if !this.isRestartable()
@@ -77,7 +79,7 @@ module.exports.TimedRound = class TimedRound extends Round
     @restartDelayInSeconds - ((this.now() - @endTime) / 1000)
 
 
-class TimeProvider
+module.exports.TimeProvider = class TimeProvider
   getTime: ->
     new Date()
 
