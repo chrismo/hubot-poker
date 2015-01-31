@@ -118,10 +118,7 @@ describe 'WaitForPlayersRound', ->
 
   beforeEach ->
     round = new Rounds.WaitForPlayersRound
-    game = new Games.BaseGame({}, round)
-    game.deal = -> return 'dealt'
-    game.commands = ->
-      [(new GameCommand(/^deal$/i, game.deal))]
+    game = new FakeGame(round)
     game.addListener(round)
 
   it 'should default to 2 minimum players', ->
@@ -130,20 +127,16 @@ describe 'WaitForPlayersRound', ->
   it 'should end when minimum players have played', ->
     expect(round.isStarted()).toBe false
     expect(round.isOver()).toBe false
-    expect(round.isRestartable()).toBe true
 
     game.sendCommand('glv', 'deal')
     expect(round.playersPlayed[0]).toBe 'glv'
     expect(round.isStarted()).toBe true
     expect(round.isOver()).toBe false
-    expect(round.isRestartable()).toBe false
 
     game.sendCommand('sara', 'deal')
     expect(round.playersPlayed.length).toBe 2
     expect(round.isStarted()).toBe false
     expect(round.isOver()).toBe true
-    expect(round.isRestartable()).toBe true
-
 
   it 'should not count same player multiple times', ->
     game.sendCommand('glv', 'deal')
@@ -157,3 +150,15 @@ class FakeReceiver
 
   ring: ->
     @called = true
+
+
+class FakeGame extends Games.BaseGame
+  constructor: (@round) ->
+    super
+
+  commands: -> [(new GameCommand(/^deal$/i, this.deal))]
+
+  deal: -> return 'dealt'
+
+  isStarted: ->
+    @round.isStarted()

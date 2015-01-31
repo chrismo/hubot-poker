@@ -242,14 +242,16 @@ describe 'ReverseHoldEm', ->
     # http://en.wikipedia.org/wiki/Betting_in_poker#.22All_in.22
 
   it 'should hold first player plays on a new round until second player', ->
-    # result = dealer.play('romer', '243243')
-    # expect(result).toBe 'Need a second player to start the next round.'
-    # result = dealer.play('romer', '555666')
-    # expect(result).toBe 'Need a second player to start the next round.'
-    # result = dealer.play('chrismo', '123123')
-    # expect(result.join("\n")).toBe 'romer played 243243\nromer played 555666\nchrismo played 123123'
-    # result = dealer.play('sara', '343434')
-    # expect(result).toBe "sara played 343434"
+    game.sendCommand('romer', '243243')
+    expect(game.waitForPlayers.isStarted()).toBe true
+    expect(game.round.isStarted()).toBe false
+
+    time.now = builder.withMinute(5).build()
+
+    game.sendCommand('chrismo', '123123')
+    expect(game.waitForPlayers.isStarted()).toBe false
+    expect(game.round.isStarted()).toBe true
+    expect(game.round.minutesRemaining()).toBe 2
 
 
 class FakeListener

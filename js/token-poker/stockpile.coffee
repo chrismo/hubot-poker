@@ -12,17 +12,20 @@ module.exports = class Stockpile extends Game.BaseGame
       '<6 digits> - Enter a 6 digit token',
     ].join("\n")
 
-  constructor: (@store, @round) ->
-    super(@store, @round)
+  constructor: (@store, roundDuration, @time) ->
+    super(@store)
     @scoreStorage = @store.scores ||= {}
-
-    @round ||= new Rounds.TimedRound(60)
+    @round = new Rounds.TimedRound(roundDuration || 60, @time)
 
   calculateOdds: ->
     new TokenPoker.OddsCalculator(@registry, 999999).calculate()
 
+  isStarted: ->
+    @round.isStarted()
+
   startRound: ->
     super
+    @round.start()
     this.resetScores()
 
   resetScores: ->
@@ -51,6 +54,7 @@ module.exports = class Stockpile extends Game.BaseGame
 
   finishRound: ->
     super
+    @round.end()
     @winner = this.scoresInWinningOrder()[0]
     this.pushScores()
 

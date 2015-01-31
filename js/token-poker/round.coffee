@@ -17,6 +17,10 @@ class Round
   isRestartable: ->
     throw "Subclass should implement"
 
+  addListener: (listener) ->
+    @listeners ||= []
+    @listeners.push(listener)
+
 
 # this class is getting ridiculous, with its 3 states:
 # isStarted(), isOver(), isRestartable() -- at least implementation-wise.
@@ -90,18 +94,26 @@ module.exports.TimeProvider = class TimeProvider
 module.exports.WaitForPlayersRound = class WaitForPlayersRound extends Round
   constructor: (@minimumPlayers=2) ->
     @playersPlayed = []
+    @state = 'not_started'
 
   isStarted: ->
-    @playersPlayed.length > 0 && @playersPlayed.length < @minimumPlayers
+    @state == 'started'
 
   isOver: ->
-    @playersPlayed.length >= @minimumPlayers
+    @state == 'over'
 
   isRestartable: ->
-    (!this.isStarted() && !this.isOver()) || this.isOver()
+    throw 'isRestartable is deprecated'
 
   onGameCommand: (playerCommand, parsedCommand, commandResult) ->
     playerName = playerCommand.playerName
     if (@playersPlayed.indexOf(playerName) == -1)
       @playersPlayed.push(playerName)
+      this.updateState()
+
+  updateState: ->
+    switch
+      when @playersPlayed.length == 0 then @state = 'not_started'
+      when @playersPlayed.length >= @minimumPlayers then @state = 'over'
+      else @state = 'started'
 

@@ -58,6 +58,17 @@ class FakeGame extends Game.BaseGame
     new GameCommand(/bet (\d+)/i, this.bet, => ("bet 30")),
   ]
 
+  isStarted: ->
+    @round.isStarted()
+
+  startRound: ->
+    super
+    @round.start()
+
+  finishRound: ->
+    super
+    @round.end()
+
   play: (@playerName, @playHand) ->
     "#{@playerName} played #{@playHand}"
 

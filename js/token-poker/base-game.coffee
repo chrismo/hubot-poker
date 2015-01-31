@@ -3,7 +3,7 @@ TokenPoker = require('./core')
 _ = require('underscore')
 
 module.exports.BaseGame = class BaseGame
-  constructor: (@store, @round) ->
+  constructor: (@store) ->
     @registry = new TokenPoker.HandRegistry([
       new TokenPoker.GroupedHand('Six of a Kind', '6', 10),
       new TokenPoker.GroupedHand('Five of a Kind', '51', 540),
@@ -25,9 +25,9 @@ module.exports.BaseGame = class BaseGame
     @listeners = []
 
   sendCommand: (playerName, args) ->
+    return if !this.matchedGameCommand(args)
+    this.ensureRoundStarted()
     try
-      return if !this.matchedGameCommand(args)
-      this.ensureRoundStarted()
       playerCommand = {playerName: playerName, args: args}
       parsedCommand = this.matchedGameCommand(playerCommand.args)
       commandResult = parsedCommand.callback.call(this, playerCommand.playerName, parsedCommand.parsedArgs[1..]...)
@@ -42,18 +42,21 @@ module.exports.BaseGame = class BaseGame
       return parsed if parsed
 
   ensureRoundStarted: ->
-    this.startRound() if !@round.isStarted()
+    this.startRound() if !this.isStarted()
 
   startRound: ->
     (l.onStartRound() if l.onStartRound) for l in @listeners
-    @round.start()
     # TODO: make subclass game get this as a listener to remove this hack - is it a hack?
+    # it is a hack in the Base game, because alarms presumes a TimedRound, which has been
+    # an ok to presume, but design-wise, base game shouldn't know/care about it.
+    #
+    # BaseGame may not need to care about rounds at all now that the push is on to get
+    # all of the minPlayer/time mgmt into ReverseHoldEm.
     this.setAlarms() if this.setAlarms
     @winner = undefined
 
   finishRound: ->
     (l.onFinishRound() if l.onFinishRound) for l in @listeners
-    @round.end()
 
   randomDigit: ->
     @randomProvider.randomDigit()

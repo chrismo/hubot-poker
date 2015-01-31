@@ -10,8 +10,8 @@ describe 'Stockpile', ->
     store = {}
     builder = new Fakes.TimeBuilder().withHour(1).withMinute(0).withSecond(0)
     time = new Fakes.FakeTimeProvider(builder.build())
-    round = new Rounds.TimedRound(120, time)
-    game = new Stockpile(store, round)
+    game = new Stockpile(store, 120, time)
+    round = game.round
 
   it 'should match highest', ->
     result = game.play('chrismo', '112345')

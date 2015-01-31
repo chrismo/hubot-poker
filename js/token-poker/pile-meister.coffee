@@ -30,8 +30,12 @@ module.exports = class PileMeister extends Game.BaseGame
     @secondsToWaitBetweenPlays = @lengthOfRoundInMinutes
     @chain = []
 
+  isStarted: ->
+    @round.isStarted()
+
   startRound: ->
     super
+    @round.start()
     this.resetScores()
 
   resetScores: ->
@@ -121,6 +125,7 @@ module.exports = class PileMeister extends Game.BaseGame
 
   finishRound: ->
     super
+    @round.end()
     @winner = this.scoresInWinningOrder()[0]
     this.pushScores()
 

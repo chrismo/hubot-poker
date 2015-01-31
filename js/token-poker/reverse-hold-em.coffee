@@ -27,9 +27,11 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     ].join("\n")
 
   constructor: (@store, @time) ->
-    super(@store, @round)
+    super(@store, @time)
     @playerStore = @store.playerStore ||= []
     @time ||= new Rounds.TimeProvider
+    @waitForPlayers = new Rounds.WaitForPlayersRound
+    this.addListener(@waitForPlayers)
     @round = new Rounds.TimedRound(2, @time)
     @playState = new HandsPlayState(this)
     @pot = new Pot(1)
@@ -135,8 +137,12 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
   storeHandResult: (handResult) ->
     @boardStore[handResult.playerName] = handResult
 
+  isStarted: ->
+    @round.isStarted()
+
   startRound: ->
     super
+    @round.start()
     @boardStore = @store.boardStore = {}
     @holeDigits = [this.randomDigit(), this.randomDigit()]
     this.pushStatus("1 point ante.")

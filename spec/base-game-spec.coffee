@@ -12,6 +12,7 @@ describe 'BaseGame', ->
     game.play = (@playPlayerName, @playArgs) ->
       console.log("#{@playPlayerName} #{@playArgs}")
     game.commands = -> [new GameCommand(/foo/i, game.play)]
+    game.isStarted = -> false
 
   it 'should pass commands through to game', ->
     game.sendCommand('romer', 'foo')

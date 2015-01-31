@@ -103,6 +103,17 @@ class KillEmAll extends Game.BaseGame
     new GameCommand(/^many (\w+) (\w+)/i, this.manyArgumentCommand)
   ]
 
+  isStarted: ->
+    @round.isStarted()
+
+  startRound: ->
+    super
+    @round.start()
+
+  finishRound: ->
+    super
+    @round.end()
+
   play: (player, hand) ->
     this.ensureRoundStarted()
     "#{player} played #{hand}"
