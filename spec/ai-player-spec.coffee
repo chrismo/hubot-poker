@@ -29,6 +29,13 @@ describe 'AiPlayer', ->
       expect(result[0..2]).toBe 'bar'
     )
 
+  it 'does nothing when commands is empty', ->
+    dealer.game.commands = -> []
+    dealer.onStatus = (@lastStatus) ->
+    ai = new AiPlayer('bar', dealer)
+    ai.doSomething()
+    expect(dealer.lastStatus).toBe undefined
+
   it 'dies when killed', ->
     ai = new AiPlayer('bar', dealer)
     result = ai.doSomething()

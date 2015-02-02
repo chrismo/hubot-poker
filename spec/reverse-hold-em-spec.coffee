@@ -259,6 +259,16 @@ describe 'ReverseHoldEm', ->
     # need new functionality now that setAlarms is bypassed
     expect(false).toBe true
 
+  it 'err', ->
+    'TypeError: Cannot call method ai of undefined' # during GameOverState
+
+  it 'end game scores are funky', ->
+    # 3 winning boards after first round
+    # 2 versions of the LAST round's board, then 3 of this round's
+
+  it 'shows 1 point ante multiple times', ->
+
+
 
 class FakeListener
   constructor: ->

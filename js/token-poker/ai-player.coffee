@@ -19,6 +19,7 @@ module.exports = class AiPlayer
     hand.join('')
 
   doSomething: (index) ->
+    return if this.gameCommands().length == 0
     @actions += 1
     this.die() if @actions > @limit
     return if not @alive
