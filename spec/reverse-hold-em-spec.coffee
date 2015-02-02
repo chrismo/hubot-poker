@@ -136,9 +136,10 @@ describe 'ReverseHoldEm', ->
     game.sendCommand('chrismo', '112357')
     game.startBetting()
     expect(listener.msgs[0]).toBe "1 point ante."
+    expect(listener.msgs[1]).not.toBe "1 point ante."
     # not going to expect the remaining instructions - this test is
     # more for the push at all, not the content itself.
-    expect(listener.msgs[3].substr(0, 30)).toBe "Hands are locked. Time to bet."
+    expect(listener.msgs[2].substr(0, 30)).toBe "Hands are locked. Time to bet."
 
   it 'should allow direct funding to a player', ->
     game.sendCommand('chrismo', '112357')
@@ -189,7 +190,7 @@ describe 'ReverseHoldEm', ->
     expect(-> game.vetPlayerForPlaying('chrismo')).toThrow "No dough, no show."
 
   it 'should not allow a player to call deal twice', ->
-    game.deal('chrismo')
+    game.sendCommand('chrismo', 'deal')
     expect(-> (game.deal('chrismo'))).toThrow 'You already have a hand, chrismo'
 
   it 'should not allow a player to call deal after play', ->
@@ -197,7 +198,7 @@ describe 'ReverseHoldEm', ->
     expect(-> (game.deal('chrismo'))).toThrow 'You already have a hand, chrismo'
 
   it 'should not allow a player to call play after deal', ->
-    game.deal('chrismo')
+    game.sendCommand('chrismo', 'deal')
     expect(-> (game.play('chrismo', '112233'))).toThrow 'You already have a hand, chrismo'
 
   it 'should properly order hands with same matchCount', ->
@@ -265,9 +266,6 @@ describe 'ReverseHoldEm', ->
   it 'end game scores are funky', ->
     # 3 winning boards after first round
     # 2 versions of the LAST round's board, then 3 of this round's
-
-  it 'shows 1 point ante multiple times', ->
-
 
 
 class FakeListener

@@ -58,7 +58,6 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
 
   play: (playerName, playerHand) ->
     this.vetPlayerForPlaying(playerName)
-    this.ensureRoundStarted()
     player = this.ensurePlayerInStore(playerName)
     this.storeHandResult(new HandResult(player, playerHand, @matcher.matchHighest(playerHand)))
     this.pushBoard()
