@@ -113,6 +113,12 @@ describe 'TimedRound', ->
   it 'should not worry about midnight across a month change cuz dang', ->
     # life too short it is
 
+  it 'should be able to clearTimeouts if round terminated', ->
+    round.start()
+    round.cleanUp() # not sure how to fake this yet
+
+
+
 describe 'WaitForPlayersRound', ->
   round = game = null
 

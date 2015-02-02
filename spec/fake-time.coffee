@@ -9,6 +9,9 @@ module.exports.FakeTimeProvider = class FakeTimeProvider
     callbackWhen = new Date(@now.getTime() + delayInMsecs)
     @callbacks[callbackWhen.toUTCString()] = callback
 
+  clearTimeout: (timeout) ->
+    timeout
+
   execCallback: ->
     callback = @callbacks[@now.toUTCString()]
     throw "none found in #{@callbacks}" if not callback

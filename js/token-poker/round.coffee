@@ -24,6 +24,9 @@ class Round
     @listeners ||= []
     @listeners.push(listener)
 
+  cleanUp: ->
+    # optional, in case a round needs to ensure things like timeouts are cleared
+
 
 # this class is getting ridiculous, with its 3 states:
 # isStarted(), isOver(), isRestartable() -- at least implementation-wise.
@@ -34,6 +37,7 @@ module.exports.TimedRound = class TimedRound extends Round
     # TODO: restartDelay can just be another round instance, right?
     @restartDelayInSeconds = 10
     @listeners = []
+    @timeouts = []
 
   start: ->
     super
@@ -70,7 +74,7 @@ module.exports.TimedRound = class TimedRound extends Round
   setAlarm: (minutesLeft, callbackThis, callback) ->
     delayInMinutes = Math.max(0, this.minutesLeft() - minutesLeft)
     delayInMsecs = delayInMinutes * 60 * 1000
-    @timeProvider.setTimeout((-> (callback.call(callbackThis))), delayInMsecs)
+    @timeouts.push(@timeProvider.setTimeout((-> (callback.call(callbackThis))), delayInMsecs))
 
   end: ->
     super
@@ -87,6 +91,10 @@ module.exports.TimedRound = class TimedRound extends Round
   restartDelaySecondsLeft: ->
     @restartDelayInSeconds - ((this.now() - @endTime) / 1000)
 
+  cleanUp: ->
+    @timeProvider.clearTimeout(timeout) for timeout in @timeouts
+    @timeouts = []
+
 
 module.exports.TimeProvider = class TimeProvider
   getTime: ->
@@ -94,6 +102,9 @@ module.exports.TimeProvider = class TimeProvider
 
   setTimeout: (callback, delayInMsecs) ->
     setTimeout(callback, delayInMsecs)
+
+  clearTimeout: (timeout) ->
+    clearTimeout(timeout)
 
 
 module.exports.WaitForPlayersRound = class WaitForPlayersRound extends Round

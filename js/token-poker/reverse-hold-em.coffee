@@ -30,12 +30,11 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     super(@store, @time)
     @playerStore = @store.playerStore ||= []
     @time ||= new Rounds.TimeProvider
-    @playState = new HandsPlayState(this, this.startBetting)
+    this.setNewPlayState(new HandsPlayState(this, this.startBetting))
     @pot = new Pot(1)
     @betDuration = 0.5
     @settleDuration = 0.5
     @endDuration = 0.1
-    @timeouts = []
     @playerStartingPoints = 100
     @playCommand = new GameCommand(/^((\d{6})|(\d{3} \d{3}))$/i, this.play, => (this.randomHand()))
     @dealCommand = new GameCommand(/^deal$/i, this.deal, => ("deal"))
@@ -47,7 +46,7 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     "\nReverseHoldEm\n\n" +
     "@playState: #{@playState.name}\n" +
     "@playerStore: #{([player.name, player.points] for player in @playerStore).join(',')}\n" +
-    (if @round.diagnostic then @round.diagnostic() else '') +
+    (if @playState.diagnostic then @playState.diagnostic() else '') +
     (if @pot.diagnostic then @pot.diagnostic() else '')
 
   commands: ->
@@ -138,7 +137,7 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     @playState.isOver()
 
   startNewRound: ->
-    @playState = new HandsPlayState(this, this.startBetting)
+    this.setNewPlayState(new HandsPlayState(this, this.startBetting))
 
   startRound: ->
     super
@@ -147,7 +146,7 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     this.pushStatus("1 point ante.")
 
   startBetting: ->
-    @playState = new BetPlayState(this, this.settleUp)
+    this.setNewPlayState(new BetPlayState(this, this.settleUp))
     this.pushBoard()
 
   finishRound: ->
@@ -155,18 +154,13 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     @winningHandResult = this.handsInWinningOrder()[0]
     @pot.settleUp()
     @pot.goesTo(@winningHandResult.player) if @winningHandResult
-    @playState = new GameOverState(this, this.startNewRound)
+    this.setNewPlayState(new GameOverState(this, this.startNewRound))
     this.pushStatus(this.showBoard())
-    this.clearTimeouts()
-
-  clearTimeouts: ->
-    clearTimeout timeout for timeout in @timeouts
-    @timeouts = []
 
   settleUp: ->
     # TODO - if highest bets are even, if players have either bet or called, could finish
     # the game immediately at this stage.
-    @playState = new SettlePlayState(this, this.finishRound)
+    this.setNewPlayState(new SettlePlayState(this, this.finishRound))
 
   applyHoleDigits: ->
     for playerName, handResult of @boardStore
@@ -212,6 +206,10 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
   getStatus: ->
     this.showBoard()
 
+  setNewPlayState: (newState) ->
+    @playState.cleanUp() if @playState
+    @playState = newState
+
 
 class HandResult
   constructor: (@player, @playerHand, @hand) ->
@@ -239,6 +237,7 @@ class PlayState
     this.onNextState = nextState
 
   nextRound: ->
+    this.cleanUp()
     @round = @rounds.shift()
     if @round == undefined
       this.onNextState.call(@game)
@@ -255,6 +254,9 @@ class PlayState
 
   isOver: ->
     @round.isOver()
+
+  cleanUp: ->
+    @round.cleanUp() if @round
 
 
 class HandsPlayState extends PlayState
