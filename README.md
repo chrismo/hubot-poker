@@ -98,3 +98,35 @@ having a command be ignored while testing in the Shell._
 
 Once you're ready, submit a PR and we'll all ~~praise your name for the fun and games you introduced us to~~ immediately 
 call into question every decision made.
+
+## RubyMine Notes
+
+### Executing *-spec.coffee in RubyMine
+
+```
+Node interpreter:  /usr/local/bin/node           # should be default
+Working directory: [Full path]/token_poker/spec  # should be default
+JavaScript file:   round-spec.coffee             # should be default
+```
+
+Set the CoffeeScript settings to be:
+```
+Path to coffee executable: [Full path]/node_modules/jasmine-node/bin/jasmine-node
+CoffeeScript parameters:   --coffee
+```
+
+You cannot debug with these settings, though.
+
+### Debugging in RubyMine
+
+The .js files can be debugged.
+
+`rake transpile` ensures all the .js files exist. (Default rake clean removes them all).
+
+The following needs to be added to the `Run Configuration...`
+```
+Node parameters: [Full path]/token_poker/node_modules/jasmine-node/bin/jasmine-node
+```
+
+The *-spec.js file can then be debugged. Not additional `Run Configuration...`
+is necessary, just Debug round-spec.js, for example.

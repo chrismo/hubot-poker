@@ -136,12 +136,23 @@ describe 'WaitForPlayersRound', ->
     game.sendCommand('sara', 'deal')
     expect(round.playersPlayed.length).toBe 2
     expect(round.isStarted()).toBe false
+    expect(round.calculateNewState()).toBe 'over'
+    expect(round.state).toBe 'over'
     expect(round.isOver()).toBe true
 
   it 'should not count same player multiple times', ->
     game.sendCommand('glv', 'deal')
     game.sendCommand('glv', 'deal')
     expect(round.playersPlayed.length).toBe 1
+
+  it 'should set the state before calling listeners', ->
+    l = new FakeListener()
+    l.onRoundStateChange = (newState) ->
+      throw 'isOver should be true' if newState == 'over' && !round.isOver()
+
+    round.addListener(l)
+    round.onGameCommand({playerName: 'foo'})
+    round.onGameCommand({playerName: 'bar'})
 
 
 class FakeReceiver
@@ -162,3 +173,7 @@ class FakeGame extends Games.BaseGame
 
   isStarted: ->
     @round.isStarted()
+
+class FakeListener
+  onRoundStateChange: (@newState) ->
+

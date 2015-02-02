@@ -16,6 +16,10 @@ module.exports = class Stockpile extends Game.BaseGame
     super(@store)
     @scoreStorage = @store.scores ||= {}
     @round = new Rounds.TimedRound(roundDuration || 60, @time)
+    @round.addListener(this)
+
+  onRoundStateChange: (state) ->
+    this.finishRound() if state == 'over'
 
   calculateOdds: ->
     new TokenPoker.OddsCalculator(@registry, 999999).calculate()
@@ -50,11 +54,10 @@ module.exports = class Stockpile extends Game.BaseGame
     @round.setAlarm(@round.total / 8, this, this.pushScores)
     @round.setAlarm(2, this, this.pushScores)
     @round.setAlarm(1, this, this.pushScores)
-    @round.setAlarm(0, this, this.finishRound)
+    #@round.setAlarm(0, this, this.finishRound)
 
   finishRound: ->
     super
-    @round.end()
     @winner = this.scoresInWinningOrder()[0]
     this.pushScores()
 

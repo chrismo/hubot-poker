@@ -16,11 +16,11 @@ describe 'ReverseHoldEm', ->
     game.playerStartingPoints = 25
 
   it 'basic gameplay with play, bet and settle rounds', ->
-    game.play('chrismo', '112 234')
-    game.play('romer', '555 964')
-    game.play('sara', '219 008')
-    game.play('glv', '134 998')
-    game.play('bogdan', '774 208')
+    game.sendCommand('chrismo', '112 234')
+    game.sendCommand('romer', '555 964')
+    game.sendCommand('sara', '219 008')
+    game.sendCommand('glv', '134 998')
+    game.sendCommand('bogdan', '774 208')
     expect(game.boardStore.romer.hand.name).toBe "Three of a Kind"
     expect(game.boardStore.chrismo.hand.name).toBe "Two Pair"
     game.holeDigits = ['5', '6']
@@ -28,23 +28,23 @@ describe 'ReverseHoldEm', ->
     game.startBetting()
 
     expect(-> game.bet('woodall', '10')).toThrow "Can't bet if you haven't played."
-    game.bet('bogdan', '3')
-    game.bet('chrismo', '10') # demo auto-call
-    game.bet('romer', '12')
-    game.fold('sara')
+    game.sendCommand('bogdan', 'bet 3')
+    game.sendCommand('chrismo', 'bet 10') # demo auto-call
+    game.sendCommand('romer', 'bet 12')
+    game.sendCommand('sara', 'fold')
     # player can call at this point now. It's potentially confusing if the player
     # has a strict expectation that call either means no higher bets can be made
     # or that the call command will be sticky, meaning it auto-adjusts to higher
     # bets. Play testing so far has shown players to be more confused over not
     # being able to issue this command at this point, presuming it would be
     # simply synonymous with "bet #{highest}".
-    game.call('glv')
+    game.sendCommand('glv', 'call')
 
     game.settleUp()
 
     expect(-> game.bet('romer', '5')).toThrow "No new bets."
-    game.call('glv')
-    game.fold('bogdan')
+    game.sendCommand('glv', 'call')
+    game.sendCommand('bogdan', 'fold')
     # chrismo does nothing and auto-calls
 
     game.finishRound()
@@ -66,40 +66,44 @@ describe 'ReverseHoldEm', ->
     expect(game.boardStore.sara.folded).toBe true
     expect(game.boardStore.bogdan.folded).toBe true
 
+    expect(game.playState.name).toBe 'end'
+
+    game.startNewRound()
+
     expect(game.playState.name).toBe 'play'
 
   it 'should show board during play', ->
-    game.play('chrismo', '112234')
+    game.sendCommand('chrismo', '112234')
     expect(game.showBoard()).toBe (
-          "Reverse Hold 'em       Hole: X X           Bet In: 1 min\n" +
-          "                                                        \n" +
-          "                                               POT / ALL\n" +
-          "chrismo              112 234  Two Pair           1 /  24"
+      "Reverse Hold 'em       Hole: X X                    Play\n" +
+      "                                                        \n" +
+      "                                               POT / ALL\n" +
+      "chrismo              112 234  Two Pair           1 /  24"
     )
-    game.play('romer', ' 555  964')
+    game.sendCommand('romer', '555 964')
     time.now = builder.withMinute(1).withSecond(0).build()
     time.execCallback()
     expect(game.showBoard()).toBe (
-          "Reverse Hold 'em       Hole: X X         Settle In: soon\n" +
-          "                 bet [xx] | call | fold                 \n" +
-          "                                               POT / ALL\n" +
-          "romer                555 964  Three of a Kind    1 /  24\n" +
-          "chrismo              112 234  Two Pair           1 /  24"
+      "Reverse Hold 'em       Hole: X X                     Bet\n" +
+      "                 bet [xx] | call | fold                 \n" +
+      "                                               POT / ALL\n" +
+      "romer                555 964  Three of a Kind    1 /  24\n" +
+      "chrismo              112 234  Two Pair           1 /  24"
     )
     game.holeDigits = ['5', '6']
     time.now = builder.withMinute(1).withSecond(30).build()
     time.execCallback()
     expect(game.showBoard()).toBe (
-          "Reverse Hold 'em       Hole: X X          Flop In: 1 min\n" +
-          "       call | fold  ||  ** auto-call in effect **       \n" +
-          "                                               POT / ALL\n" +
-          "romer                555 964  Three of a Kind    1 /  24\n" +
-          "chrismo              112 234  Two Pair           1 /  24"
+      "Reverse Hold 'em       Hole: X X                  Settle\n" +
+      "       call | fold  ||  ** auto-call in effect **       \n" +
+      "                                               POT / ALL\n" +
+      "romer                555 964  Three of a Kind    1 /  24\n" +
+      "chrismo              112 234  Two Pair           1 /  24"
     )
     time.now = builder.withMinute(2).withSecond(0).build()
     time.execCallback()
     expect(game.showBoard()).toBe (
-          "Reverse Hold 'em       Hole: 5 6           Winner: romer\n" +
+      "Reverse Hold 'em       Hole: 5 6           Winner: romer\n" +
           "                                                        \n" +
           "                                               POT / ALL\n" +
           "romer                555 964  Full House         0 /  26\n" +
@@ -110,12 +114,12 @@ describe 'ReverseHoldEm', ->
     game.getStatus()
 
   it 'should default new players with 25 points', ->
-    game.play('chrismo', '112357')
+    game.sendCommand('chrismo', '112357')
     expect(game.playerStore.length).toBe 1
     expect(game.playerStore[0].name).toBe 'chrismo'
 
   it 'should persist players across games', ->
-    game.play('chrismo', '112357')
+    game.sendCommand('chrismo', '112357')
     chrismo = game.playerStore[0]
     chrismo.points = 45
     expect(game.pot.players.length).toBe 1
@@ -123,63 +127,63 @@ describe 'ReverseHoldEm', ->
     game = new ReverseHoldEm(store, time)
     expect(game.playerStore[0].name).toBe 'chrismo'
     expect(game.playerStore[0].points).toBe 45
-    game.play('chrismo', '112357')
+    game.sendCommand('chrismo', '112357')
     expect(game.pot.players.length).toBe 1
 
   it 'should push notice of when time to bet', ->
     listener = new FakeListener()
     game.setListener(listener)
-    game.play('chrismo', '112357')
+    game.sendCommand('chrismo', '112357')
     game.startBetting()
     expect(listener.msgs[0]).toBe "1 point ante."
     # not going to expect the remaining instructions - this test is
     # more for the push at all, not the content itself.
-    expect(listener.msgs[2].substr(0, 30)).toBe "Hands are locked. Time to bet."
+    expect(listener.msgs[3].substr(0, 30)).toBe "Hands are locked. Time to bet."
 
   it 'should allow direct funding to a player', ->
-    game.play('chrismo', '112357')
+    game.sendCommand('chrismo', '112357')
     game.deal('sam')
     game.startBetting()
-    game.bet('chrismo', '20')
+    game.sendCommand('chrismo', 'bet 20')
     expect(game.playerStore[0].points).toBe 25 - 1 - 20
     game.fundPlayer('chrismo', '30')
     expect(game.playerStore[0].points).toBe 30
 
   it 'should declare a winner if everyone but one player folds'
   it 'should not allow a folded player to win', ->
-    game.play('chrismo', '123456')
-    game.play('romer', '112357')
+    game.sendCommand('chrismo', '123456')
+    game.sendCommand('romer', '112357')
     game.startBetting()
     expect(game.boardStore.romer.folded).toBe false
     expect(game.boardStore.chrismo.folded).toBe false
-    game.fold('chrismo')
+    game.sendCommand('chrismo', 'fold')
     expect(game.boardStore.chrismo.folded).toBe true
     expect(game.winningHandResult.playerName).toBe 'romer'
 
   it 'should end during betting if all players have bet or called to same max', ->
-    game.play('woodall', '123456')
-    game.play('sara', '111222')
+    game.sendCommand('woodall', '123456')
+    game.sendCommand('sara', '111222')
     game.startBetting()
     expect(game.winningHandResult).toBe undefined
-    game.bet('sara', '12')
+    game.sendCommand('sara', 'bet 12')
     expect(game.winningHandResult).toBe undefined
-    game.call('woodall')
+    game.sendCommand('woodall', 'call')
     expect(game.winningHandResult.playerName).toBe 'sara'
 
   it 'should end during fold if remaining players have bet or called to same max', ->
-    game.play('woodall', '123456')
-    game.play('sara', '111222')
-    game.play('sam', '444 444')
+    game.sendCommand('woodall', '123456')
+    game.sendCommand('sara', '111222')
+    game.sendCommand('sam', '444 444')
     game.startBetting()
-    game.bet('sara', '12')
-    game.call('woodall')
-    game.fold('sam')
+    game.sendCommand('sara', 'bet 12')
+    game.sendCommand('woodall', 'call')
+    game.sendCommand('sam', 'fold')
     expect(game.winningHandResult.playerName).toBe 'sara'
 
   it 'should not allow a player with no points to play', ->
     expect(game.playerStore.length).toBe 0
     expect(game.vetPlayerForPlaying('chrismo')).toBe true
-    game.play('chrismo', '112357')
+    game.sendCommand('chrismo', '112357')
     expect(game.playerStore[0].points).toBe 24
     game.playerStore[0].points = 0
     expect(-> game.vetPlayerForPlaying('chrismo')).toThrow "No dough, no show."
@@ -189,7 +193,7 @@ describe 'ReverseHoldEm', ->
     expect(-> (game.deal('chrismo'))).toThrow 'You already have a hand, chrismo'
 
   it 'should not allow a player to call deal after play', ->
-    game.play('chrismo', '112233')
+    game.sendCommand('chrismo', '112233')
     expect(-> (game.deal('chrismo'))).toThrow 'You already have a hand, chrismo'
 
   it 'should not allow a player to call play after deal', ->
@@ -200,8 +204,8 @@ describe 'ReverseHoldEm', ->
     # 4-oak and 3 pair have the same matchCount, so we decide
     # who wins by what works for other hands, simply sort by
     # digits hi-to-low and subtract.
-    game.play('romer', '213333')
-    game.play('chrismo', '443322')
+    game.sendCommand('romer', '213333')
+    game.sendCommand('chrismo', '443322')
     expect(game.handsInWinningOrder()[0].playerName).toBe 'chrismo'
 
   it 'needs real hands comparison', ->
@@ -211,8 +215,8 @@ describe 'ReverseHoldEm', ->
 
     # Remming this out for later
 
-    #game.play('sara', '666 551')
-    #game.play('woodall', '555 669')
+    #game.sendCommand('sara', '666 551')
+    #game.sendCommand('woodall', '555 669')
     #expect(game.handsInWinningOrder()[0].playerName).toBe 'sara'
 
   it 'is really not that simple', ->
@@ -243,15 +247,17 @@ describe 'ReverseHoldEm', ->
 
   it 'should hold first player plays on a new round until second player', ->
     game.sendCommand('romer', '243243')
-    expect(game.waitForPlayers.isStarted()).toBe true
-    expect(game.round.isStarted()).toBe false
+    expect(game.isStarted()).toBe true
 
     time.now = builder.withMinute(5).build()
 
     game.sendCommand('chrismo', '123123')
-    expect(game.waitForPlayers.isStarted()).toBe false
-    expect(game.round.isStarted()).toBe true
-    expect(game.round.minutesRemaining()).toBe 2
+    expect(game.isStarted()).toBe true
+  #expect(game.playState.round.remainingMinutes()).toBe 2
+
+  it 'should clear timeouts if finishing happens early', ->
+    # need new functionality now that setAlarms is bypassed
+    expect(false).toBe true
 
 
 class FakeListener

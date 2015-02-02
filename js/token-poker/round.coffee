@@ -1,10 +1,13 @@
 class Round
+  constructor: ->
+    @listeners = []
+
   start: ->
     return if this.isStarted()
     this.throwIfNotRestartable()
 
   throwIfNotRestartable: ->
-    throw "Round not restartable" if !this.isRestartable()
+    throw "Round not restartable" if this.isRestartable && !this.isRestartable()
 
   end: ->
 
@@ -15,7 +18,7 @@ class Round
     throw "Subclass should implement"
 
   isRestartable: ->
-    throw "Subclass should implement"
+    true # deprecated
 
   addListener: (listener) ->
     @listeners ||= []
@@ -30,12 +33,13 @@ module.exports.TimedRound = class TimedRound extends Round
     @timeProvider ||= new TimeProvider
     # TODO: restartDelay can just be another round instance, right?
     @restartDelayInSeconds = 10
+    @listeners = []
 
   start: ->
     super
     @startTime = @timeProvider.getTime()
     @endTime = undefined
-    # this.setAlarm(0, this, this.end) <-- prolly need, but not yet
+    this.setAlarm(0, this, this.end)
 
   throwIfNotRestartable: ->
     throw "Next round starts in #{Math.floor(this.restartDelaySecondsLeft())} seconds." if !this.isRestartable()
@@ -72,6 +76,7 @@ module.exports.TimedRound = class TimedRound extends Round
     super
     @endTime = this.now()
     @startTime = undefined
+    l.onRoundStateChange('over') for l in @listeners
 
   isRestartable: ->
     @startTime == undefined && (@endTime == undefined || this.restartDelayExpired())
@@ -93,6 +98,7 @@ module.exports.TimeProvider = class TimeProvider
 
 module.exports.WaitForPlayersRound = class WaitForPlayersRound extends Round
   constructor: (@minimumPlayers=2) ->
+    super
     @playersPlayed = []
     @state = 'not_started'
 
@@ -102,9 +108,6 @@ module.exports.WaitForPlayersRound = class WaitForPlayersRound extends Round
   isOver: ->
     @state == 'over'
 
-  isRestartable: ->
-    throw 'isRestartable is deprecated'
-
   onGameCommand: (playerCommand, parsedCommand, commandResult) ->
     playerName = playerCommand.playerName
     if (@playersPlayed.indexOf(playerName) == -1)
@@ -112,8 +115,14 @@ module.exports.WaitForPlayersRound = class WaitForPlayersRound extends Round
       this.updateState()
 
   updateState: ->
-    switch
-      when @playersPlayed.length == 0 then @state = 'not_started'
-      when @playersPlayed.length >= @minimumPlayers then @state = 'over'
-      else @state = 'started'
+    newState = this.calculateNewState()
 
+    if newState != @state
+      @state = newState
+      l.onRoundStateChange(newState) for l in @listeners
+
+  calculateNewState: ->
+    switch
+      when @playersPlayed.length == 0 then 'not_started'
+      when @playersPlayed.length >= @minimumPlayers then 'over'
+      else 'started'

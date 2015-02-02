@@ -30,16 +30,11 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     super(@store, @time)
     @playerStore = @store.playerStore ||= []
     @time ||= new Rounds.TimeProvider
-    @waitForPlayers = new Rounds.WaitForPlayersRound
-    this.addListener(@waitForPlayers)
-    @round = new Rounds.TimedRound(2, @time)
-    @playState = new HandsPlayState(this)
+    @playState = new HandsPlayState(this, this.startBetting)
     @pot = new Pot(1)
-    # there's a smell around these durations and the play state classes.
-    # there's a more elegant way to string these together, i can feel it.
-    # They're much like Rounds.
     @betDuration = 0.5
     @settleDuration = 0.5
+    @endDuration = 0.1
     @timeouts = []
     @playerStartingPoints = 100
     @playCommand = new GameCommand(/^((\d{6})|(\d{3} \d{3}))$/i, this.play, => (this.randomHand()))
@@ -138,33 +133,32 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     @boardStore[handResult.playerName] = handResult
 
   isStarted: ->
-    @round.isStarted()
+    @playState.isStarted()
+
+  isOver: ->
+    @playState.isOver()
+
+  startNewRound: ->
+    @playState = new HandsPlayState(this, this.startBetting)
 
   startRound: ->
     super
-    @round.start()
     @boardStore = @store.boardStore = {}
     @holeDigits = [this.randomDigit(), this.randomDigit()]
     this.pushStatus("1 point ante.")
 
-  setAlarms: ->
-    @timeouts.push @round.setAlarm(@betDuration + @settleDuration, this, this.startBetting)
-    @timeouts.push @round.setAlarm(@settleDuration, this, this.settleUp)
-    @timeouts.push @round.setAlarm(0, this, this.finishRound)
-
   startBetting: ->
-    @playState = new BetPlayState(this)
+    @playState = new BetPlayState(this, this.settleUp)
     this.pushBoard()
 
   finishRound: ->
-    @round.end()
     this.applyHoleDigits()
     @winningHandResult = this.handsInWinningOrder()[0]
     @pot.settleUp()
     @pot.goesTo(@winningHandResult.player) if @winningHandResult
+    @playState = new GameOverState(this, this.startNewRound)
     this.pushStatus(this.showBoard())
     this.clearTimeouts()
-    @playState = new HandsPlayState(this)
 
   clearTimeouts: ->
     clearTimeout timeout for timeout in @timeouts
@@ -173,7 +167,7 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
   settleUp: ->
     # TODO - if highest bets are even, if players have either bet or called, could finish
     # the game immediately at this stage.
-    @playState = new SettlePlayState(this)
+    @playState = new SettlePlayState(this, this.finishRound)
 
   applyHoleDigits: ->
     for playerName, handResult of @boardStore
@@ -188,19 +182,16 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
 
   showBoard: ->
     width = 56
-    remaining = @playState.remainingMinutes()
-    remainingText = if (remaining >= 1) then "#{remaining} min" else "soon"
 
-    holeDigits = if @round.isOver() then @holeDigits.join(' ') else 'X X'
+    holeDigits = if this.isOver() then @holeDigits.join(' ') else 'X X'
     title = "Reverse Hold 'em       Hole: #{holeDigits}"
 
-    status = if @round.isOver()
+    status = if this.isOver()
       "Winner: #{@winningHandResult.playerName}".rjust(width - title.length)
     else
-      action = @playState.nextStateLabel()
-      "#{action} In: #{remainingText}".rjust(width - title.length)
+      @playState.status().rjust(width - title.length)
 
-    boardInstructions = if @round.isOver() then '' else @playState.boardInstructions()
+    boardInstructions = if this.isOver() then '' else @playState.boardInstructions()
 
     header = [
       "#{title}#{status}",
@@ -244,15 +235,38 @@ class HandResult
       other.playerHandSorted() - this.playerHandSorted()
 
 
-class HandsPlayState
-  constructor: (@game) ->
+class PlayState
+  constructor: (@game, nextState) ->
+    this.onNextState = nextState
+
+  nextRound: ->
+    @round = @rounds.shift()
+    if @round == undefined
+      this.onNextState.call(@game)
+    else
+      @round.start()
+      @round.addListener(this)
+      @game.addListener(@round)
+
+  onRoundStateChange: (state) ->
+    this.nextRound() if @round.isOver()
+
+  isStarted: ->
+    @round.isStarted()
+
+  isOver: ->
+    @round.isOver()
+
+
+class HandsPlayState extends PlayState
+  constructor: (@game, nextState) ->
+    super(@game, nextState)
     @name = 'play'
+    @rounds = [new Rounds.WaitForPlayersRound, new Rounds.TimedRound(1, @game.time)]
+    this.nextRound()
 
-  remainingMinutes: ->
-    @game.round.minutesLeft() - @game.betDuration - @game.settleDuration
-
-  nextStateLabel: ->
-    'Bet'
+  status: ->
+    'Play'
 
   boardInstructions: ->
     ''
@@ -264,18 +278,18 @@ class HandsPlayState
     [ @game.playCommand, @game.dealCommand ]
 
 
-class BetPlayState
-  constructor: (@game) ->
+class BetPlayState extends PlayState
+  constructor: (@game, nextState) ->
+    super(@game, nextState)
     @name = 'bet'
     @game.pushStatus ["Hands are locked. Time to bet. Type 'bet' and a number.",
                       "Type 'call' to match the highest bid so far.",
                       "Type 'fold' to fold and forfeit anything bet already."].join("\n")
+    @rounds = [new Rounds.TimedRound(@game.betDuration, @game.time)]
+    this.nextRound()
 
-  remainingMinutes: ->
-    @game.round.minutesLeft() - @game.settleDuration
-
-  nextStateLabel: ->
-    'Settle'
+  status: ->
+    'Bet'
 
   boardInstructions: ->
     'bet [xx] | call | fold'
@@ -287,19 +301,19 @@ class BetPlayState
     [ @game.betCommand, @game.foldCommand, @game.callCommand  ]
 
 
-class SettlePlayState
-  constructor: (@game) ->
+class SettlePlayState extends PlayState
+  constructor: (@game, nextState) ->
+    super(@game, nextState)
     @name = 'settle'
     @game.pushStatus ["No new bets. Time to settle up. ",
                       "Type 'call' to match the highest bid and stay in.",
                       "Type 'fold' to fold and forfeit anything bet already.",
                       "* Doing nothing will automatically call *"].join("\n")
+    @rounds = [new Rounds.TimedRound(@game.settleDuration, @game.time)]
+    this.nextRound()
 
-  remainingMinutes: ->
-    @game.round.minutesLeft()
-
-  nextStateLabel: ->
-    'Flop'
+  status: ->
+    'Settle'
 
   boardInstructions: ->
     'call | fold  ||  ** auto-call in effect **'
@@ -310,3 +324,29 @@ class SettlePlayState
 
   commands: ->
     [ @game.foldCommand, @game.callCommand  ]
+
+
+class GameOverState extends PlayState
+  constructor: (@game, nextState) ->
+    super(@game, nextState)
+    @name = 'end'
+    @rounds = [new Rounds.TimedRound(@game.endDuration, @game.time)]
+    this.nextRound()
+
+  isStarted: ->
+    false
+
+  isOver: ->
+    true
+
+  status: ->
+    ''
+
+  boardInstructions: ->
+    ''
+
+  vetAction: (action, betAction) ->
+    throw "Patience. A new game will start momentarily."
+
+  commands: ->
+    []
