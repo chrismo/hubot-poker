@@ -49,8 +49,27 @@ module.exports.StraightHand = class StraightHand extends Hand
     if x then x[0].length else 0
 
 
+module.exports.FlushHand = class FlushHand extends Hand
+  constructor: (@name) ->
+
+  matches: (playerHand) ->
+    suits = _.map(playerHand.cards, (c) -> c.suit.value)
+    uniq = _.uniq(suits)
+    uniq.length == 1
+
+
+module.exports.StraightFlushHand = class StraightFlushHand extends Hand
+  constructor: (@name, count=5) ->
+    @sh = new StraightHand()
+    @fh = new FlushHand()
+
+  matches: (playerHand) ->
+    @sh.matches(playerHand) && @fh.matches(playerHand)
 
 module.exports.HandRegistry = class HandRegistry
-  constructor: (@hands) ->
+  constructor: ->
+    @hands = [
+
+    ]
 
 
