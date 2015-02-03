@@ -28,3 +28,28 @@ describe 'GroupedHand', ->
     gh = new CardPoker.GroupedHand('Two Pair', '22')
     hand = d.findAll(['2C', '2D', '4S', '4C'])
     expect(gh.matches(new CardPoker.PlayerHand(hand))).toBe true
+
+
+describe 'StraightHand', ->
+  d = null
+
+  beforeEach ->
+    d = new Core.Deck()
+
+  it 'should get count of one intervals', ->
+    hand = d.findAll(['2C', '3D', '5S', '6C', '4H'])
+    expect(CardPoker.StraightHand.countOfOneIntervals(hand)).toBe 4
+
+  it 'should match 5 straight', ->
+    hand = d.findAll(['2C', '3D', '5S', '6C', '4H'])
+    sh = new CardPoker.StraightHand('Straight')
+    expect(sh.matches(new CardPoker.PlayerHand(hand))).toBe true
+
+  it 'should match 5 straight face cards', ->
+    hand = d.findAll(['AC', '10D', 'JS', 'QC', 'KH'])
+    sh = new CardPoker.StraightHand('Straight')
+    expect(sh.matches(new CardPoker.PlayerHand(hand))).toBe true
+
+
+describe 'FlushHand', ->
+

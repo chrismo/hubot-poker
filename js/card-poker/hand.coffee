@@ -34,23 +34,20 @@ module.exports.GroupedHand = class GroupedHand extends Hand
 
 
 module.exports.StraightHand = class StraightHand extends Hand
-  constructor: (@name, count, @matchCount) ->
-    @matchCount = 0 if @matchCount == undefined
+  constructor: (@name, count=5) ->
     @count = count - 1
 
-  matchesFromDigits: (playerHandDigits) ->
-    this.countOfOneIntervals(playerHandDigits) == @count
+  matches: (playerHand) ->
+    StraightHand.countOfOneIntervals(playerHand.cards) == @count
 
-  countOfOneIntervals: (playerHandDigits) ->
-    sorted = playerHandDigits.sort (a, b) -> a - b
+  @countOfOneIntervals: (cards) ->
+    ranks = cards.map (c) -> c.rank.value
+    sorted = ranks.sort (a, b) -> a - b
     uniq = _.uniq(sorted)
-    intervals = uniq.map (d, index) ->
-      uniq[index + 1] - uniq[index]
+    intervals = uniq.map (d, index) -> uniq[index + 1] - uniq[index]
     x = intervals.join('').match(/1+/)
     if x then x[0].length else 0
 
-  codeGen: ->
-    "new StraightHand('#{@name}', #{@count + 1}, #{@matchCount})"
 
 
 module.exports.HandRegistry = class HandRegistry
