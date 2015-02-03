@@ -1,4 +1,4 @@
-Player = require('../js/token-poker/player')
+Player = require('../../js/token-poker/player')
 
 describe 'Player', ->
   it 'should record total points owned', ->

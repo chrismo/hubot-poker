@@ -1,4 +1,4 @@
-TokenPoker = require('../js/token-poker/core')
+TokenPoker = require('../../js/token-poker/core')
 _ = require('underscore')
 
 describe 'HandMatcher', ->

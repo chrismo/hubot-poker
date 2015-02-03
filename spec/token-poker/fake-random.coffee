@@ -1,4 +1,4 @@
-Core = require('../js/token-poker/core')
+Core = require('../../js/token-poker/core')
 _ = require('underscore')
 
 module.exports = class FakeRandom

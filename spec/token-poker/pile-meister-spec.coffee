@@ -1,7 +1,7 @@
 Fakes = require('./fake-time')
 FakeRandom = require('./fake-random')
-PileMeister = require('../js/token-poker/pile-meister')
-Rounds = require('../js/token-poker/round')
+PileMeister = require('../../js/token-poker/pile-meister')
+Rounds = require('../../js/token-poker/round')
 
 describe 'PileMeister', ->
   store = game = null

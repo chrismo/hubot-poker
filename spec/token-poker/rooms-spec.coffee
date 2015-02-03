@@ -1,5 +1,5 @@
 # msg.message.user.room
-Rooms = require('../js/token-poker/rooms')
+Rooms = require('../../js/token-poker/rooms')
 
 describe 'Rooms', ->
   rooms = null
