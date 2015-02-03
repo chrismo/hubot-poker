@@ -18,5 +18,5 @@ end
 
 # useful to ensure they exist in order to debug with node
 task :transpile do
-  system 'node_modules/coffee-script/bin/coffee -c js/**/*.coffee spec/*.coffee'
+  system 'node_modules/coffee-script/bin/coffee -c js/**/*.coffee spec/**/*.coffee'
 end

@@ -7,6 +7,9 @@ module.exports.Card = class Card
   to_s: ->
     "#{@rank.label}#{@suit.value}"
 
+  code: ->
+    this.to_s()
+
   display: ->
     "[#{@rank.label}#{@suit.label}]"
 
@@ -40,7 +43,8 @@ module.exports.Deck = class Deck
   deal: (count=1) ->
     @cards.shift() for [1..count]
 
+  find: (code) ->
+    _.detect(@cards, (c) -> c.to_s() == code)
 
-module.exports.Hand = class Hand
-  constructor: (@cards) ->
-
+  findAll: (codes) ->
+    (this.find(s) for s in codes)
