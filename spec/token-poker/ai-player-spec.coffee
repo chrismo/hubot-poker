@@ -3,8 +3,8 @@ AiPlayer = require('../../js/token-poker/ai-player')
 Game = require('../../js/token-poker/base-game')
 Dealer = require('../../js/token-poker/dealer')
 FakeRandom = require('./fake-random')
-GameCommand = require('../../js/token-poker/game-command')
-Round = require('../../js/token-poker/round')
+GameCommand = require('../../js/poker/game-command')
+Round = require('../../js/poker/round')
 
 describe 'AiPlayer', ->
   dealer = null

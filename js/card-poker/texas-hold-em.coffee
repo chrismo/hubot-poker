@@ -4,25 +4,27 @@ GameCommand = require('../poker/game-command')
 Player = require('../poker/player')
 Pot = require('../poker/pot')
 Rounds = require('../poker/round')
-TokenPoker = require('./core')
+CardPoker = require('./core')
 
 # TODO support separate Board and Score commands, so the board could be shown, but also overall players point list
-module.exports = class ReverseHoldEm extends Game.BaseGame
+# TODO: sequential player betting
+# TODO: split pot
+# TODO: betting rounds in between various card flops
+module.exports = class TexasHoldEm extends Game.BaseGame
   @help: ->
     [
-      "Reverse Hold 'em",
+      "Texas Hold 'em",
       '',
-      '<6 digits> - Enter a 6 digit token',
-      'deal       - Have hubot deal you a random hand',
+      'deal       - Have hubot deal you a hand',
       "bet [xx]   - When it's time to bet, optionally bet a number of points.",
       "call       - When it's time to bet or settle up, match your bet to the highest bet.",
       "fold       - When it's time to bet or settle up, fold your hand."
       '',
-      "Game goes in 3 phases: play phase where anyone can enter their 6 digit token,",
+      "Game goes in 3 phases: play phase where anyone can are dealt your 2 card hand,",
       "bet phase when you can bet, call or fold, and settle phase where only call or",
-      "fold are allowed. Two community hole cards (random digits) are held until the"
-      "very end of the hand. When revealed, the best hand out of each player's 6",
-      "digits plus the 2 community digits will be assigned to each player and the best",
+      "fold are allowed. Community cards are shown at the beginning of the round (all at"
+      "once for now). The best hand out of each player's cards",
+      "plus the community cards will be assigned to each player and the best",
       "hand wins. If you do not fold, you will automatically call the highest bet."
     ].join("\n")
 
@@ -36,29 +38,26 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     @settleDuration = 0.5
     @endDuration = 0.1
     @playerStartingPoints = 100
-    @playCommand = new GameCommand(/^((\d{6})|(\d{3} \d{3}))$/i, this.play, => (this.randomHand()))
     @dealCommand = new GameCommand(/^deal$/i, this.deal, => ("deal"))
     @betCommand = new GameCommand(/^bet (\d+)$/i, this.bet, => ("bet #{this.randomProvider.randomInt(20)}"))
     @foldCommand = new GameCommand(/^fold$/i, this.fold, => ("fold"))
     @callCommand = new GameCommand(/^call$/i, this.call, => ("call"))
 
   diagnostic: ->
-    "\nReverseHoldEm\n\n" +
-    "@playState: #{@playState.name}\n" +
-    "@playerStore: #{([player.name, player.points] for player in @playerStore).join(',')}\n" +
-    (if @playState.diagnostic then @playState.diagnostic() else '') +
-    (if @pot.diagnostic then @pot.diagnostic() else '')
+    "\nTexasHoldEm\n\n" +
+        "@playState: #{@playState.name}\n" +
+        "@playerStore: #{([player.name, player.points] for player in @playerStore).join(',')}\n" +
+        (if @playState.diagnostic then @playState.diagnostic() else '') +
+        (if @pot.diagnostic then @pot.diagnostic() else '')
 
   commands: ->
     @playState.commands()
 
   deal: (playerName) ->
-    this.play(playerName, this.randomHand())
-
-  play: (playerName, playerHand) ->
     this.vetPlayerForPlaying(playerName)
     player = this.ensurePlayerInStore(playerName)
-    this.storeHandResult(new HandResult(player, playerHand, @matcher.matchHighest(playerHand)))
+    playerHand = this.dealHand()
+    this.storeHandResult(new HandResult(player, playerHand, null))
     this.pushBoard()
     null # to indicate no reply is necessary, the board will be pushed
 
@@ -78,6 +77,11 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     @pot.call(this.vetPlayerForBetting(playerName, 'call'))
     this.pushBoard() unless this.allBetsSettled()
     null
+
+  dealHand: ->
+    hand = @deck.deal(2)
+    this.pushToPlayer(hand.display())
+    hand
 
   vetPlayerForPlaying: (playerName) ->
     # TODO: allow folding at anytime, but have to workaround checkForLoneWinner and call it again at the start of betting.
@@ -142,7 +146,9 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
   startRound: ->
     super
     @boardStore = @store.boardStore = {}
-    @holeDigits = [this.randomDigit(), this.randomDigit()]
+    @deck = new CardPoker.Deck()
+    @deck.shuffle()
+    @holeCards = @deck.deal(5)
     this.pushStatus("1 point ante.")
 
   startBetting: ->
@@ -150,7 +156,7 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     this.pushBoard()
 
   finishRound: ->
-    this.applyHoleDigits()
+    this.applyCommunityCards()
     @winningHandResult = this.handsInWinningOrder()[0]
     @pot.settleUp()
     @pot.goesTo(@winningHandResult.player) if @winningHandResult
@@ -162,10 +168,10 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     # the game immediately at this stage.
     this.setNewPlayState(new SettlePlayState(this, this.finishRound))
 
-  applyHoleDigits: ->
+  applyCommunityCards: ->
     for playerName, handResult of @boardStore
-      handPlusHoles = handResult.playerHand + @holeDigits.join('')
-      handResult.hand = @matcher.matchHighest(handPlusHoles)
+      handPlusHoles = handResult.playerHand.cards + @holeCards.cards
+      handResult.hand = @matcher.matchHighest(new Hand.PlayerHand(handPlusHoles))
       this.storeHandResult(handResult)
 
   handsInWinningOrder: ->
@@ -176,8 +182,8 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
   showBoard: ->
     width = 56
 
-    holeDigits = if this.isOver() then @holeDigits.join(' ') else 'X X'
-    title = "Reverse Hold 'em       Hole: #{holeDigits}"
+    title = "Texas Hold 'em"
+    communityCards = "Community: #{@holeCards.display()}"
 
     status = if this.isOver()
       "Winner: #{@winningHandResult.playerName}".rjust(width - title.length)
@@ -187,21 +193,30 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     boardInstructions = if this.isOver() then '' else @playState.boardInstructions()
 
     header = [
-      "#{title}#{status}",
-      boardInstructions.center(width),
-      "POT / ALL".rjust(width),
-      ''
+      "`#{title}#{status}`",
+      "`#{boardInstructions.center(width)}`",
+      communityCards,
+      "`#{"POT / ALL".rjust(width)}`",
+      '``'
     ]
 
     hands = (this.formatHandResult handResult, width for handResult in this.handsInWinningOrder())
-    header.join('\n') + hands.join('\n')
+    header.concat(hands)
 
   formatHandResult: (handResult, width) ->
-    handDisplay = if handResult.folded then '* FOLDED *' else handResult.hand.name
-    left = "#{handResult.playerName.substr(0, 20).ljust(20)} #{handResult.playerHand}  #{handDisplay}"
+    handNameDisplay =
+      if handResult.folded
+        '* FOLDED *'
+      else
+        if handResult.hand
+          handResult.hand.name
+        else
+          '---'
+    handDisplay = if this.isOver() handResult.playerHand.display() else '[X,X]'
+    left = "#{handResult.playerName.substr(0, 20).ljust(20)} #{handDisplay}  #{handNameDisplay}"
     right = "#{(handResult.player.totalBet + '').rjust(3)} / #{(handResult.player.points + '').rjust(3)}"
     right = right.rjust(width - left.length)
-    "#{left}#{right}"
+    "`#{left}#{right}`"
 
   getStatus: ->
     this.showBoard()
@@ -215,21 +230,18 @@ class HandResult
   constructor: (@player, @playerHand, @hand) ->
     @folded = false
     @playerName = @player.name
-    @playerHand = @playerHand.replace(/\s+/g, '').replace(/\d\d\d/, "$& ")
 
   foldedAsSortInt: ->
     if @folded then 1 else 0
 
-  playerHandSorted: ->
-    ((TokenPoker.Hand.toDigitArray(@playerHand)).sort (a, b) -> b - a).join('')
-
   compare: (other) ->
     if @folded != other.folded
       this.foldedAsSortInt() - other.foldedAsSortInt()
-    else if @hand.matchCount != other.hand.matchCount
-      @hand.matchCount - other.hand.matchCount
+    else if @hand && other.hand
+      @hand.rank - other.hand.rank
     else
-      other.playerHandSorted() - this.playerHandSorted()
+      # TODO: could sort based on high bet?
+      0
 
 
 class PlayState
@@ -276,7 +288,7 @@ class HandsPlayState extends PlayState
     throw "You can't bet now." if action == 'bet'
 
   commands: ->
-    [ @game.playCommand, @game.dealCommand ]
+    [@game.dealCommand]
 
 
 class BetPlayState extends PlayState
@@ -299,7 +311,7 @@ class BetPlayState extends PlayState
     throw "Hands are locked" if action == 'play'
 
   commands: ->
-    [ @game.betCommand, @game.foldCommand, @game.callCommand  ]
+    [@game.betCommand, @game.foldCommand, @game.callCommand]
 
 
 class SettlePlayState extends PlayState
@@ -324,7 +336,7 @@ class SettlePlayState extends PlayState
     throw "No new bets." if betAction == 'bet'
 
   commands: ->
-    [ @game.foldCommand, @game.callCommand  ]
+    [@game.foldCommand, @game.callCommand]
 
 
 class GameOverState extends PlayState

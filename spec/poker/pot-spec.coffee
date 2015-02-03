@@ -1,4 +1,4 @@
-Pot = require('../../js/token-poker/pot')
+Pot = require('../../js/poker/pot')
 
 
 describe 'Pot with ante', ->

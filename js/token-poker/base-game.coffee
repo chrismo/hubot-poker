@@ -1,4 +1,4 @@
-GameCommand = require('./game-command')
+GameCommand = require('../poker/game-command')
 TokenPoker = require('./core')
 _ = require('underscore')
 

@@ -5,16 +5,25 @@ _ = require('underscore')
 module.exports.PlayerHand = class PlayerHand
   constructor: (@cards) ->
 
+  display: ->
+    (c.display() for c in @cards).join('')
+
+  codes: ->
+    "[#{(c.code() for c in @cards).join(',')}]"
+
 
 module.exports.Hand = class Hand
   constructor: ->
 
 
 module.exports.GroupedHand = class GroupedHand extends Hand
-  constructor: (@name, @groupingFingerprint) ->
+  constructor: (@name, @groupingFingerprint, @rank) ->
 
   matches: (playerHand) ->
-    GroupedHand.groupings(playerHand.cards) == @groupingFingerprint
+    this.matchesCards(playerHand.cards)
+
+  matchesCards: (cards) ->
+    GroupedHand.groupings(cards) == @groupingFingerprint
 
   @groupings: (cards) ->
     groups = cards.reduce((prev, card) ->
@@ -34,11 +43,14 @@ module.exports.GroupedHand = class GroupedHand extends Hand
 
 
 module.exports.StraightHand = class StraightHand extends Hand
-  constructor: (@name, count=5) ->
+  constructor: (@name, count=5, @rank) ->
     @count = count - 1
 
   matches: (playerHand) ->
-    StraightHand.countOfOneIntervals(playerHand.cards) == @count
+    this.matchesCards(playerHand.cards)
+
+  matchesCards: (cards) ->
+    StraightHand.countOfOneIntervals(cards) == @count
 
   @countOfOneIntervals: (cards) ->
     ranks = cards.map (c) -> c.rank.value
@@ -50,26 +62,92 @@ module.exports.StraightHand = class StraightHand extends Hand
 
 
 module.exports.FlushHand = class FlushHand extends Hand
-  constructor: (@name) ->
+  constructor: (@name, @rank) ->
 
   matches: (playerHand) ->
-    suits = _.map(playerHand.cards, (c) -> c.suit.value)
+    this.matchesCards(playerHand.cards)
+
+  matchesCards: (cards) ->
+    suits = _.map(cards, (c) -> c.suit.value)
     uniq = _.uniq(suits)
     uniq.length == 1
 
 
 module.exports.StraightFlushHand = class StraightFlushHand extends Hand
-  constructor: (@name, count=5) ->
-    @sh = new StraightHand()
+  constructor: (@name, count=5, @rank) ->
+    @sh = new StraightHand('', count)
     @fh = new FlushHand()
 
   matches: (playerHand) ->
-    @sh.matches(playerHand) && @fh.matches(playerHand)
+    this.matchesCards(playerHand.cards)
+
+  matchesCards: (cards) ->
+    @sh.matchesCards(cards) && @fh.matchesCards(cards)
+
 
 module.exports.HandRegistry = class HandRegistry
   constructor: ->
     @hands = [
-
+      new StraightFlushHand('Straight Flush', 5, 1),
+      new GroupedHand('Four of a Kind', '4', 2),
+      new GroupedHand('Full House', '32', 3),
+      new FlushHand('Flush', 4),
+      new StraightHand('Straight', 5, 5),
+      new GroupedHand('Three of a Kind', '3', 6),
+      new GroupedHand('Two Pair', '22', 7),
+      new GroupedHand('One Pair', '2', 8),
+      new GroupedHand('High Card', '', 9),
     ]
 
 
+module.exports.HandMatcher = class HandMatcher
+  constructor: (@registry=new HandRegistry()) ->
+
+  matchAll: (playerHand) ->
+    hands = []
+    for comb in this.combinations(playerHand.cards)
+      combHands = ({hand: hand, comb: comb} for hand in @registry.hands when hand.matchesCards(comb))
+      hands.push combHands
+    hands = _.flatten(hands)
+    hands.sort (a, b) -> a.hand.rank - b.hand.rank
+
+  matchHighest: (playerHand) ->
+    this.matchAll(playerHand)[0]
+
+  # combinations are not order dependent, permutations are.
+  # ripped from ruby array.c
+  combinations: (cards, max) ->
+    max ||= 5
+    results = []
+    length = cards.length
+    return [cards] if length <= max
+
+    # skipping special cases for max == 0 && max == 1
+
+    # /me wishes Array(max).map(function() {0}) worked, but don't
+    stack = []
+    _.times(max, () -> (stack.push(0)))
+    stack[0] = -1
+
+    chosen = Array(max)
+    allDone = false
+    lev = 0
+
+    while true
+      chosen[lev] = cards[stack[lev + 1]]
+      lev += 1
+      for lev in [lev...max] by 1 # redundant by 1 to reduce js mess
+        stack[lev + 1] = stack[lev] + 1
+        chosen[lev] = cards[stack[lev + 1]]
+      results.push chosen.slice(0) # hack for cloning the array
+      while true
+        if (lev == 0)
+          allDone = true # no goto in this lang
+          break
+        stack[lev] += 1
+        lev -= 1
+        break if ((stack[lev + 1] + max) != (length + lev + 1))
+
+      break if (lev == 0) && allDone
+
+    results

@@ -1,7 +1,7 @@
 Game = require('../../js/token-poker/base-game')
 Dealer = require('../../js/token-poker/dealer')
-GameCommand = require('../../js/token-poker/game-command')
-Rounds = require('../../js/token-poker/round')
+GameCommand = require('../../js/poker/game-command')
+Rounds = require('../../js/poker/round')
 
 describe 'Dealer', ->
   dealer = null

@@ -1,7 +1,7 @@
 ReverseHoldEm = require('../../js/token-poker/reverse-hold-em')
 Fakes = require('./fake-time')
-Rounds = require('../../js/token-poker/round')
-Player = require('../../js/token-poker/player')
+Rounds = require('../../js/poker/round')
+Player = require('../../js/poker/player')
 
 describe 'ReverseHoldEm', ->
   store = game = null

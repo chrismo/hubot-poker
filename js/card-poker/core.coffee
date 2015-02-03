@@ -1,4 +1,5 @@
 _ = require('underscore')
+Hand = require('./hand')
 
 
 module.exports.Card = class Card
@@ -32,7 +33,7 @@ module.exports.Deck = class Deck
 
     suits = (new Suit(pair[0], pair[1]) for pair in _.zip(
         ['S', 'H', 'C', 'D'],
-        [':spades:', ':hearts:', ':clubs:', ':diamonds:'])
+        ['♠', '♥', '♣', '♦︎'])
     )
 
     @cards = _.flatten(new Card(r, s) for r in ranks for s in suits)
@@ -41,10 +42,10 @@ module.exports.Deck = class Deck
     @cards = _.shuffle(@cards)
 
   deal: (count=1) ->
-    @cards.shift() for [1..count]
+    new Hand.PlayerHand(@cards.shift() for [1..count])
 
   find: (code) ->
     _.detect(@cards, (c) -> c.to_s() == code)
 
   findAll: (codes) ->
-    (this.find(s) for s in codes)
+    new Hand.PlayerHand((this.find(s) for s in codes))

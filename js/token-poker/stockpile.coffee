@@ -1,7 +1,7 @@
 _ = require('underscore')
 Game = require ('./base-game')
-GameCommand = require('./game-command')
-Rounds = require('./round')
+GameCommand = require('../poker/game-command')
+Rounds = require('../poker/round')
 TokenPoker = require('./core')
 
 module.exports = class Stockpile extends Game.BaseGame
