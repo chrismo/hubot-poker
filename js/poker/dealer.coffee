@@ -10,7 +10,7 @@ module.exports = class Dealer
     @store ||= {}
     @store.tokenPoker ||= {}
     @dealerStore = @store.tokenPoker[@id] ||= {}
-    @gameClasses ||= [ReverseHoldEm, PileMeister, Stockpile, TexasHoldEm]
+    @gameClasses ||= [TexasHoldEm, ReverseHoldEm, PileMeister, Stockpile]
     @currentGameClass = @gameClasses[0]
     @ais = []
     @listeners = []
