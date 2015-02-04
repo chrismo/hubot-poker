@@ -7,10 +7,10 @@ Rounds = require('../poker/round')
 CardPoker = require('./core')
 Hand = require('./hand')
 
-# TODO support separate Board and Score commands, so the board could be shown, but also overall players point list
-# TODO: sequential player betting
-# TODO: split pot
 # TODO: betting rounds in between various card flops
+# TODO: split pot (if multiple players best hand are the community cards)
+# TODO: sequential player betting
+# TODO support separate Board and Score commands, so the board could be shown, but also overall players point list
 module.exports = class TexasHoldEm extends Game.BaseGame
   @help: ->
     [
@@ -172,9 +172,8 @@ module.exports = class TexasHoldEm extends Game.BaseGame
   applyCommunityCards: ->
     for playerName, handResult of @boardStore
       handPlusHoles = handResult.playerHand.cards.concat(@holeCards.cards)
-      match = @matcher.matchHighest(new Hand.PlayerHand(handPlusHoles))
-      handResult.hand = match.hand
-      handResult.bestHand = new Hand.PlayerHand(match.comb).sort()
+      matchedHand = @matcher.matchHighest(new Hand.PlayerHand(handPlusHoles))
+      handResult.matchedHand = matchedHand
       this.storeHandResult(handResult)
 
   handsInWinningOrder: ->
@@ -202,8 +201,8 @@ module.exports = class TexasHoldEm extends Game.BaseGame
 
   formatHandResult: (handResult) ->
     if this.isOver()
-      handNameDisplay = if handResult.folded then '* FOLDED *' else "*#{handResult.hand.name}*"
-      handDisplay = "#{handResult.playerHand.display()} — Best Hand: #{handResult.bestHand.display()}  —"
+      handNameDisplay = if handResult.folded then '* FOLDED *' else "*#{handResult.matchedHand.hand.name}*"
+      handDisplay = "#{handResult.playerHand.display()} — Best Hand: #{handResult.matchedHand.playerHand.display()}  —"
     else
       handNameDisplay = if handResult.folded then '* FOLDED *' else ''
       handDisplay = '[X][X]'
@@ -220,7 +219,7 @@ module.exports = class TexasHoldEm extends Game.BaseGame
 
 
 class HandResult
-  constructor: (@player, @playerHand, @hand) ->
+  constructor: (@player, @playerHand) ->
     @folded = false
     @playerName = @player.name
 
@@ -230,10 +229,9 @@ class HandResult
   compare: (other) ->
     if @folded != other.folded
       this.foldedAsSortInt() - other.foldedAsSortInt()
-    else if @hand && other.hand
-      @hand.rank - other.hand.rank
-    else
-      # TODO: could sort based on high bet?
+    else if @matchedHand && other.matchedHand
+      @matchedHand.compare(other.matchedHand)
+    else # still in play - could sort by player name? or amount bet?
       0
 
 

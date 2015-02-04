@@ -58,7 +58,7 @@ describe 'TexasHoldEm', ->
     game.finishRound()
 
     expect(game.winningHandResult.playerName).toBe 'romer'
-    expect(game.winningHandResult.hand.name).toBe 'Full House'
+    expect(game.winningHandResult.matchedHand.hand.name).toBe 'Full House'
     expect(game.playerStore[0].name).toBe 'chrismo'
     expect(game.playerStore[0].points).toBe 25 - 1 - 12
     expect(game.playerStore[1].name).toBe 'romer'

@@ -34,12 +34,33 @@ describe 'GroupedHand', ->
     hand = d.findAll(['2C', '3D', '4S', '7C', 'AH'])
     expect(gh.matches(hand)).toBe true
 
+  it 'should sort One Pair first, then kickers in descending', ->
+    pHand = d.findAll(['2C', '3C', '2H', '4C', 'AD'])
+    sortedCards = CardPoker.GroupedHand.sortCards(pHand)
+    sortedHand = new CardPoker.PlayerHand(sortedCards)
+    expect(sortedHand.codes()).toEqual '[2H,2C,AD,4C,3C]'
+
+  it 'should compare two One Pair hands, one pair higher', ->
+    a = d.findAll(['2C', '2D', '3C', '4C', 'AD'])
+    b = d.findAll(['5C', '5D', '3H', '4H', '7H'])
+
+    hand = new CardPoker.GroupedHand('One Pair', '2', 2)
+    expect(hand.compare(a, b)).toBe 3
+
+  it 'should compare two One Pair hands, same pairs, different kickers', ->
+    a = d.findAll(['2C', '2D', '3C', '4C', 'AD'])
+    b = d.findAll(['2S', '2H', '3H', '4H', '7H'])
+
+    hand = new CardPoker.GroupedHand('One Pair', '2', 2)
+    expect(hand.compare(a, b)).toBe -7
+
 
 describe 'StraightHand', ->
-  d = null
+  d = sh = null
 
   beforeEach ->
     d = new Core.Deck()
+    sh = new CardPoker.StraightHand('Straight')
 
   it 'should get count of one intervals', ->
     hand = d.findAll(['2C', '3D', '5S', '6C', '4H'])
@@ -47,13 +68,21 @@ describe 'StraightHand', ->
 
   it 'should match 5 straight', ->
     hand = d.findAll(['2C', '3D', '5S', '6C', '4H'])
-    sh = new CardPoker.StraightHand('Straight')
     expect(sh.matches(hand)).toBe true
 
   it 'should match 5 straight face cards', ->
     hand = d.findAll(['AC', '10D', 'JS', 'QC', 'KH'])
-    sh = new CardPoker.StraightHand('Straight')
     expect(sh.matches(hand)).toBe true
+
+  it 'sorts cards by rank only', ->
+    hand = d.findAll(['AC', '10D', 'JS', 'QC', 'KH'])
+    sh.sortCards(hand)
+    expect(hand.codes()).toBe '[AC,KH,QC,JS,10D]'
+
+  it 'compares two Straights sorting by rank', ->
+    a = d.findAll(['2C', '3D', '5S', '6C', '4H'])
+    b = d.findAll(['AC', '10D', 'JS', 'QC', 'KH'])
+    expect(sh.compare(a, b)).toBe 8
 
 
 describe 'FlushHand', ->
@@ -112,7 +141,7 @@ describe 'HandMatcher', ->
     all = matcher.matchAll(hand)
     expect(all.length).toBe 21
     expect(all[0].hand.name).toBe 'Four of a Kind'
-    expect(all[0].comb).toEqual d.findAll(['7S', '7H', '7C', 'AC', '7D']).cards
+    expect(all[0].playerHand.codes()).toBe d.findAll(['7S', '7H', '7C', '7D', 'AC']).codes()
 
   it 'should match all straight flush with community cards', ->
     matcher = new CardPoker.HandMatcher()

@@ -12,15 +12,30 @@ module.exports.PlayerHand = class PlayerHand
     "[#{(c.code() for c in @cards).join(',')}]"
 
   sort: ->
-    @cards = @cards.sort((a, b) ->
-      rankDiff = b.rank.value - a.rank.value
-      if rankDiff == 0 then a.suit.sort - b.suit.sort else rankDiff
-    )
+    @cards = @cards.sort((a, b) -> a.compare(b))
     this
 
 
 module.exports.Hand = class Hand
   constructor: ->
+
+  sortCards: (playerHand) ->
+    playerHand.sort()
+
+  compare: (aPlayerHand, bPlayerHand) ->
+    aMatches = this.matches(aPlayerHand)
+    bMatches = this.matches(bPlayerHand)
+    throw "player hands do not match hand" unless aMatches && bMatches
+
+    this.sortCards(aPlayerHand)
+    this.sortCards(bPlayerHand)
+
+    zipped = _.zip(aPlayerHand.cards, bPlayerHand.cards)
+    for pair in zipped
+      aRank = pair[0].rank.value
+      bRank = pair[1].rank.value
+      return bRank - aRank unless aRank == bRank
+    return 0
 
 
 module.exports.GroupedHand = class GroupedHand extends Hand
@@ -32,8 +47,8 @@ module.exports.GroupedHand = class GroupedHand extends Hand
   matchesCards: (cards) ->
     GroupedHand.groupings(cards) == @groupingFingerprint
 
-  @groupings: (cards) ->
-    groups = cards.reduce((prev, card) ->
+  @groups: (cards) ->
+    cards.reduce((prev, card) ->
       _ranks = Object.keys(prev).map (c) -> parseInt(c)
       if (card.rank.value in _ranks)
         prev[card.rank.value]++
@@ -42,11 +57,28 @@ module.exports.GroupedHand = class GroupedHand extends Hand
       prev
     , {})
 
+  @groupings: (cards) ->
+    groups = GroupedHand.groups(cards)
+
     counts = for digit, count of groups
       count
     counts = counts.sort (a, b) -> b - a
     counts = _.select(counts, (c) -> c > 1)
     counts.join('')
+
+  @sortCards: (hand) ->
+    groups = GroupedHand.groups(hand.cards)
+    hand.cards = hand.cards.sort((a, b) ->
+      weightedByGroupDiff = groups[b.rank.value] - groups[a.rank.value]
+      if weightedByGroupDiff == 0
+        a.compare(b)
+      else
+        weightedByGroupDiff
+    )
+
+  sortCards: (hand) ->
+    GroupedHand.sortCards(hand)
+
 
 
 module.exports.StraightHand = class StraightHand extends Hand
@@ -107,16 +139,25 @@ module.exports.HandRegistry = class HandRegistry
     ]
 
 
+module.exports.MatchedHand = class MatchedHand
+  constructor: (@hand, @playerHand) ->
+    throw "playerHand does not match hand" unless @hand.matches(@playerHand)
+
+  compare: (other) ->
+    handDiff = @hand.rank - other.hand.rank
+    if handDiff == 0 then @hand.compare(@playerHand, other.playerHand) else handDiff
+
+
 module.exports.HandMatcher = class HandMatcher
   constructor: (@registry = new HandRegistry()) ->
 
   matchAll: (playerHand) ->
-    hands = []
+    matchedHands = []
     for comb in this.combinations(playerHand.cards)
-      combHands = ({hand: hand, comb: comb} for hand in @registry.hands when hand.matchesCards(comb))
-      hands.push combHands
-    hands = _.flatten(hands)
-    hands.sort (a, b) -> a.hand.rank - b.hand.rank
+      matchedHand = (new MatchedHand(hand, new PlayerHand(comb)) for hand in @registry.hands when hand.matchesCards(comb))
+      matchedHands.push matchedHand
+    matchedHands = _.flatten(matchedHands)
+    matchedHands.sort((a, b) -> a.compare(b))
 
   matchHighest: (playerHand) ->
     this.matchAll(playerHand)[0]

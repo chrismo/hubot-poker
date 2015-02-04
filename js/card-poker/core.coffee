@@ -14,6 +14,11 @@ module.exports.Card = class Card
   display: ->
     "#{@rank.label}#{@suit.label}"
 
+  compare: (other) ->
+    rankDiff = other.rank.value - @rank.value
+    if rankDiff == 0 then @suit.sort - other.suit.sort else rankDiff
+
+
 
 module.exports.Rank = class Rank
   constructor: (@value, @label) ->
