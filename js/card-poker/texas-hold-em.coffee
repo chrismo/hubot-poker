@@ -171,8 +171,10 @@ module.exports = class TexasHoldEm extends Game.BaseGame
 
   applyCommunityCards: ->
     for playerName, handResult of @boardStore
-      handPlusHoles = handResult.playerHand.cards + @holeCards.cards
-      handResult.hand = @matcher.matchHighest(new Hand.PlayerHand(handPlusHoles))
+      handPlusHoles = handResult.playerHand.cards.concat(@holeCards.cards)
+      match = @matcher.matchHighest(new Hand.PlayerHand(handPlusHoles))
+      handResult.hand = match.hand
+      handResult.bestHand = new Hand.PlayerHand(match.comb)
       this.storeHandResult(handResult)
 
   handsInWinningOrder: ->
