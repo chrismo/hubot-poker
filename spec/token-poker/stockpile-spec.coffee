@@ -1,5 +1,5 @@
 Stockpile = require('../../js/token-poker/stockpile')
-Fakes = require('./fake-time')
+Fakes = require('./../poker/fake-time')
 Rounds = require('../../js/poker/round')
 
 describe 'Stockpile', ->

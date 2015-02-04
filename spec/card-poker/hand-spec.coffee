@@ -132,7 +132,11 @@ describe 'PlayerHand', ->
     d = new Core.Deck()
 
   it 'should handle display', ->
-    expect(d.findAll(['2D', '4C']).display()).toBe '[2♦︎][4♣]'
+    expect(d.findAll(['2D', '4C']).display()).toEqual '2♦︎ 4♣'
 
   it 'should handle codes', ->
     expect(d.findAll(['2D', '4C']).codes()).toBe '[2D,4C]'
+
+  it 'should sort', ->
+    expect(d.findAll(['4D', '6C', '3H']).sort().codes()).toBe '[6C,4D,3H]'
+    expect(d.findAll(['4D', '4S', '4H', '4C']).sort().codes()).toBe '[4S,4H,4C,4D]'

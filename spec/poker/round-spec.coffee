@@ -1,7 +1,7 @@
 GameCommand = require('../../js/poker/game-command')
 Rounds = require('../../js/poker/round')
 Games = require('../../js/token-poker/base-game')
-Fakes = require('./../token-poker/fake-time')
+Fakes = require('./../poker/fake-time')
 
 describe 'TimedRound', ->
   time = builder = round = null

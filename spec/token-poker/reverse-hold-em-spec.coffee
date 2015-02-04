@@ -1,5 +1,5 @@
 ReverseHoldEm = require('../../js/token-poker/reverse-hold-em')
-Fakes = require('./fake-time')
+Fakes = require('./../poker/fake-time')
 Rounds = require('../../js/poker/round')
 Player = require('../../js/poker/player')
 

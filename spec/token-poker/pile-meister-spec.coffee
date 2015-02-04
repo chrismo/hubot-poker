@@ -1,4 +1,4 @@
-Fakes = require('./fake-time')
+Fakes = require('./../poker/fake-time')
 FakeRandom = require('./fake-random')
 PileMeister = require('../../js/token-poker/pile-meister')
 Rounds = require('../../js/poker/round')

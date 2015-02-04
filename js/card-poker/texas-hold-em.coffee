@@ -174,7 +174,7 @@ module.exports = class TexasHoldEm extends Game.BaseGame
       handPlusHoles = handResult.playerHand.cards.concat(@holeCards.cards)
       match = @matcher.matchHighest(new Hand.PlayerHand(handPlusHoles))
       handResult.hand = match.hand
-      handResult.bestHand = new Hand.PlayerHand(match.comb)
+      handResult.bestHand = new Hand.PlayerHand(match.comb).sort()
       this.storeHandResult(handResult)
 
   handsInWinningOrder: ->
@@ -183,35 +183,33 @@ module.exports = class TexasHoldEm extends Game.BaseGame
     handResults.sort (a, b) -> a.compare(b)
 
   showBoard: ->
-    width = 56
-
-    title = "Texas Hold 'em"
-    communityCards = "Community: #{@holeCards.display()}"
+    communityCards = "#{@holeCards.display()}"
 
     status = if this.isOver()
-      "Winner: #{@winningHandResult.playerName}".rjust(width - title.length)
+      "Winner: #{@winningHandResult.playerName}"
     else
-      @playState.status().rjust(width - title.length)
+      @playState.status()
+    title = "Texas Hold 'em: #{status}"
 
     boardInstructions = if this.isOver() then '' else @playState.boardInstructions()
 
-    header = [
-      "`#{title}#{status}`",
-      "`#{boardInstructions.center(width)}`",
-      communityCards,
-      "`#{"POT / ALL".rjust(width)}`",
-    ]
+    header = [title]
+    header.push(boardInstructions) if boardInstructions.length > 1
+    header.push(communityCards)
 
-    hands = (this.formatHandResult handResult, width for handResult in this.handsInWinningOrder())
+    hands = (this.formatHandResult handResult for handResult in this.handsInWinningOrder())
     header.concat(hands)
 
-  formatHandResult: (handResult, width) ->
-    handNameDisplay = if handResult.folded then '* FOLDED *' else (if handResult.hand then handResult.hand.name else '---')
-    handDisplay = if this.isOver() then handResult.playerHand.display() else '[X,X]'
-    left = "#{handResult.playerName.substr(0, 20).ljust(20)} #{handDisplay}  #{handNameDisplay}"
-    right = "#{(handResult.player.totalBet + '').rjust(3)} / #{(handResult.player.points + '').rjust(3)}"
-    right = right.rjust(width - left.length)
-    "`#{left}#{right}`"
+  formatHandResult: (handResult) ->
+    if this.isOver()
+      handNameDisplay = if handResult.folded then '* FOLDED *' else "*#{handResult.hand.name}*"
+      handDisplay = "#{handResult.playerHand.display()} — Best Hand: #{handResult.bestHand.display()}  —"
+    else
+      handNameDisplay = if handResult.folded then '* FOLDED *' else ''
+      handDisplay = '[X][X]'
+
+    points = "#{handResult.player.totalBet} / #{handResult.player.points}"
+    "#{handDisplay} #{handNameDisplay}  #{points}  *#{handResult.playerName}*"
 
   getStatus: ->
     this.showBoard()

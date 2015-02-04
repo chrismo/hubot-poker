@@ -12,7 +12,7 @@ module.exports.Card = class Card
     this.to_s()
 
   display: ->
-    "[#{@rank.label}#{@suit.label}]"
+    "#{@rank.label}#{@suit.label}"
 
 
 module.exports.Rank = class Rank
@@ -20,7 +20,7 @@ module.exports.Rank = class Rank
 
 
 module.exports.Suit = class Suit
-  constructor: (@value, @label) ->
+  constructor: (@value, @label, @sort) ->
 
 
 module.exports.Deck = class Deck
@@ -31,9 +31,11 @@ module.exports.Deck = class Deck
     ranks.push new Rank(13, 'K')
     ranks.push new Rank(14, 'A')
 
-    suits = (new Suit(pair[0], pair[1]) for pair in _.zip(
+    suits = (new Suit(pair[0], pair[1], pair[2]) for pair in _.zip(
         ['S', 'H', 'C', 'D'],
-        ['♠', '♥', '♣', '♦︎'])
+        ['♠', '♥', '♣', '♦︎'],
+        [1, 2, 3, 4]
+    )
     )
 
     @cards = _.flatten(new Card(r, s) for r in ranks for s in suits)
@@ -41,7 +43,7 @@ module.exports.Deck = class Deck
   shuffle: ->
     @cards = _.shuffle(@cards)
 
-  deal: (count=1) ->
+  deal: (count = 1) ->
     new Hand.PlayerHand(@cards.shift() for [1..count])
 
   find: (code) ->

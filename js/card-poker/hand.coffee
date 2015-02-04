@@ -6,10 +6,17 @@ module.exports.PlayerHand = class PlayerHand
   constructor: (@cards) ->
 
   display: ->
-    (c.display() for c in @cards).join('')
+    (c.display() for c in @cards).join(' ')
 
   codes: ->
     "[#{(c.code() for c in @cards).join(',')}]"
+
+  sort: ->
+    @cards = @cards.sort((a, b) ->
+      rankDiff = b.rank.value - a.rank.value
+      if rankDiff == 0 then a.suit.sort - b.suit.sort else rankDiff
+    )
+    this
 
 
 module.exports.Hand = class Hand
@@ -43,7 +50,7 @@ module.exports.GroupedHand = class GroupedHand extends Hand
 
 
 module.exports.StraightHand = class StraightHand extends Hand
-  constructor: (@name, count=5, @rank) ->
+  constructor: (@name, count = 5, @rank) ->
     @count = count - 1
 
   matches: (playerHand) ->
@@ -74,7 +81,7 @@ module.exports.FlushHand = class FlushHand extends Hand
 
 
 module.exports.StraightFlushHand = class StraightFlushHand extends Hand
-  constructor: (@name, count=5, @rank) ->
+  constructor: (@name, count = 5, @rank) ->
     @sh = new StraightHand('', count)
     @fh = new FlushHand()
 
@@ -101,7 +108,7 @@ module.exports.HandRegistry = class HandRegistry
 
 
 module.exports.HandMatcher = class HandMatcher
-  constructor: (@registry=new HandRegistry()) ->
+  constructor: (@registry = new HandRegistry()) ->
 
   matchAll: (playerHand) ->
     hands = []
