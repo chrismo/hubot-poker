@@ -23,7 +23,7 @@
 
 _ = require('underscore')
 Rooms = require('./token-poker/rooms')
-Dealer = require('./token-poker/dealer')
+Dealer = require('./poker/dealer')
 
 rooms = the_robot = null
 
@@ -92,7 +92,7 @@ module.exports = (robot) ->
       command = terms.shift()
       if /^play/.test(command)
         gameName = terms.shift()
-        msg.send formatResponse(dealer.changeGame(msg.message.user.name, gameName))
+        msg.send dealer.changeGame(msg.message.user.name, gameName)
       if /^fund/.test(command)
         amount = parseInt(terms.shift())
         playerName = terms.join(' ')
@@ -123,20 +123,23 @@ module.exports = (robot) ->
 
             msg.send "Killed #{playerName}"
     catch error
-      console.log(error)
-      msg.send error.msg
+      console.log(error.stack)
+      msg.send error.message
 
   handleReply = (msg, result) ->
     response = formatResponse(result)
     msg.reply response if response?
 
   formatResponse = (response) ->
-    for response in _.flatten([response])
-      if response?
-        text = if response.toStatus then response.toStatus() else response
-        return if text.indexOf("\n") > -1 then "```\n#{text}\n```\n" else text
-      else
-        return null
+    if _.isArray(response)
+      return response.join("\n")
+    else
+      for response in _.flatten([response])
+        if response?
+          text = if response.toStatus then response.toStatus() else response
+          return if text.indexOf("\n") > -1 then "```\n#{text}\n```\n" else text
+        else
+          return null
 
   currentRoom = (msg) ->
     '' + msg.message.user.room
@@ -153,7 +156,10 @@ class GameListener
   constructor: (@robot, @room) ->
 
   onStatus: (text) ->
-    @robot.messageRoom @room, "```\n#{text}\n```\n"
+    @robot.messageRoom @room, if _.isArray(text) then text.join("\n") else text
+
+  onPushToPlayer: (playerName, msg) ->
+    @robot.adapter.send {room: playerName}, msg if @robot.brain.userForName(playerName)
 
   onStartRound: ->
 

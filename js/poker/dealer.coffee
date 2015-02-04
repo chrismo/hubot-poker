@@ -1,7 +1,8 @@
-AiPlayer = require('./ai-player')
-PileMeister = require('./pile-meister')
-ReverseHoldEm = require('./reverse-hold-em')
-Stockpile = require('./stockpile')
+AiPlayer = require('./../token-poker/ai-player')
+PileMeister = require('./../token-poker/pile-meister')
+ReverseHoldEm = require('./../token-poker/reverse-hold-em')
+Stockpile = require('./../token-poker/stockpile')
+TexasHoldEm = require('./../card-poker/texas-hold-em')
 _ = require('underscore')
 
 module.exports = class Dealer
@@ -9,7 +10,7 @@ module.exports = class Dealer
     @store ||= {}
     @store.tokenPoker ||= {}
     @dealerStore = @store.tokenPoker[@id] ||= {}
-    @gameClasses ||= [ReverseHoldEm, PileMeister, Stockpile]
+    @gameClasses ||= [ReverseHoldEm, PileMeister, Stockpile, TexasHoldEm]
     @currentGameClass = @gameClasses[0]
     @ais = []
     @listeners = []
@@ -69,6 +70,9 @@ module.exports = class Dealer
   onStatus: (status) ->
     l.onStatus(status) for l in @listeners
 
+  onPushToPlayer: (playerName, msg) ->
+    l.onPushToPlayer(playerName, msg) for l in @listeners
+
   onStartRound: ->
     l.onStartRound() for l in @listeners
 
@@ -87,7 +91,7 @@ module.exports = class Dealer
         newGameClass = hits[0]
         if newGameClass != @currentGameClass
           @currentGameClass = newGameClass
-          @game.finishRound() if @game
+          @game.abortGame() if @game
           this.startNewGame()
           "New game of #{this.toListName(newGameClass)} started."
         else

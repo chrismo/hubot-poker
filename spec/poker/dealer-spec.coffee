@@ -1,5 +1,5 @@
 Game = require('../../js/token-poker/base-game')
-Dealer = require('../../js/token-poker/dealer')
+Dealer = require('../../js/poker/dealer')
 GameCommand = require('../../js/poker/game-command')
 Rounds = require('../../js/poker/round')
 
@@ -113,6 +113,9 @@ class KillEmAll extends Game.BaseGame
   finishRound: ->
     super
     @round.end()
+
+  abortGame: ->
+    this.finishRound()
 
   play: (player, hand) ->
     this.ensureRoundStarted()

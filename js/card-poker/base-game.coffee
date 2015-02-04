@@ -6,7 +6,6 @@ _ = require('underscore')
 module.exports.BaseGame = class BaseGame
   constructor: (@store) ->
     @matcher = new Hand.HandMatcher()
-    @randomProvider ||= new RandomProvider
 
     @listeners = []
 
@@ -20,6 +19,7 @@ module.exports.BaseGame = class BaseGame
       (l.onGameCommand(playerCommand, parsedCommand, commandResult) if l.onGameCommand) for l in @listeners
       commandResult
     catch error
+      console.log(error.stack)
       error
 
   matchedGameCommand: (args) ->
@@ -37,11 +37,16 @@ module.exports.BaseGame = class BaseGame
   finishRound: ->
     (l.onFinishRound() if l.onFinishRound) for l in @listeners
 
+  abortGame: ->
+
   addListener: (listener) ->
     @listeners.push(listener)
 
   pushStatus: (text) ->
     (l.onStatus(text) if l.onStatus) for l in @listeners
+
+  pushToPlayer: (playerName, msg) ->
+    (l.onPushToPlayer(playerName, msg) if l.onPushToPlayer) for l in @listeners
 
 
 `

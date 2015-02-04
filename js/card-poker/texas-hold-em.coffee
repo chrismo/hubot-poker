@@ -5,6 +5,7 @@ Player = require('../poker/player')
 Pot = require('../poker/pot')
 Rounds = require('../poker/round')
 CardPoker = require('./core')
+Hand = require('./hand')
 
 # TODO support separate Board and Score commands, so the board could be shown, but also overall players point list
 # TODO: sequential player betting
@@ -56,7 +57,7 @@ module.exports = class TexasHoldEm extends Game.BaseGame
   deal: (playerName) ->
     this.vetPlayerForPlaying(playerName)
     player = this.ensurePlayerInStore(playerName)
-    playerHand = this.dealHand()
+    playerHand = this.dealHand(playerName)
     this.storeHandResult(new HandResult(player, playerHand, null))
     this.pushBoard()
     null # to indicate no reply is necessary, the board will be pushed
@@ -78,9 +79,9 @@ module.exports = class TexasHoldEm extends Game.BaseGame
     this.pushBoard() unless this.allBetsSettled()
     null
 
-  dealHand: ->
+  dealHand: (playerName) ->
     hand = @deck.deal(2)
-    this.pushToPlayer(hand.display())
+    this.pushToPlayer(playerName, hand.display())
     hand
 
   vetPlayerForPlaying: (playerName) ->
@@ -197,22 +198,14 @@ module.exports = class TexasHoldEm extends Game.BaseGame
       "`#{boardInstructions.center(width)}`",
       communityCards,
       "`#{"POT / ALL".rjust(width)}`",
-      '``'
     ]
 
     hands = (this.formatHandResult handResult, width for handResult in this.handsInWinningOrder())
     header.concat(hands)
 
   formatHandResult: (handResult, width) ->
-    handNameDisplay =
-      if handResult.folded
-        '* FOLDED *'
-      else
-        if handResult.hand
-          handResult.hand.name
-        else
-          '---'
-    handDisplay = if this.isOver() handResult.playerHand.display() else '[X,X]'
+    handNameDisplay = if handResult.folded then '* FOLDED *' else (if handResult.hand then handResult.hand.name else '---')
+    handDisplay = if this.isOver() then handResult.playerHand.display() else '[X,X]'
     left = "#{handResult.playerName.substr(0, 20).ljust(20)} #{handDisplay}  #{handNameDisplay}"
     right = "#{(handResult.player.totalBet + '').rjust(3)} / #{(handResult.player.points + '').rjust(3)}"
     right = right.rjust(width - left.length)

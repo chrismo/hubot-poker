@@ -1,7 +1,7 @@
 _ = require('underscore')
 AiPlayer = require('../../js/token-poker/ai-player')
 Game = require('../../js/token-poker/base-game')
-Dealer = require('../../js/token-poker/dealer')
+Dealer = require('../../js/poker/dealer')
 FakeRandom = require('./fake-random')
 GameCommand = require('../../js/poker/game-command')
 Round = require('../../js/poker/round')

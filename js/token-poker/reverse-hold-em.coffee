@@ -157,6 +157,9 @@ module.exports = class ReverseHoldEm extends Game.BaseGame
     this.setNewPlayState(new GameOverState(this, this.startNewRound))
     this.pushStatus(this.showBoard())
 
+  abortGame: ->
+    @playState.cleanUp()
+
   settleUp: ->
     # TODO - if highest bets are even, if players have either bet or called, could finish
     # the game immediately at this stage.

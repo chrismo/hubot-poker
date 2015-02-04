@@ -58,6 +58,8 @@ module.exports.BaseGame = class BaseGame
   finishRound: ->
     (l.onFinishRound() if l.onFinishRound) for l in @listeners
 
+  abortGame: ->
+
   randomDigit: ->
     @randomProvider.randomDigit()
 

@@ -13,6 +13,8 @@ CLEAN << Rake::FileList['{js,spec}/**/*.{js,map}']
 
 task :deploy do
   FileUtils.cp(Dir['./js/token-poker-hubot-dealer.coffee'], '../gamebot/scripts', verbose: true)
+  FileUtils.cp(Dir['./js/card-poker/*.coffee'], '../gamebot/scripts/card-poker', verbose: true)
+  FileUtils.cp(Dir['./js/poker/*.coffee'], '../gamebot/scripts/poker', verbose: true)
   FileUtils.cp(Dir['./js/token-poker/*.coffee'], '../gamebot/scripts/token-poker', verbose: true)
 end
 
