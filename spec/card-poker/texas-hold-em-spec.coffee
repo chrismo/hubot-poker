@@ -37,8 +37,9 @@ describe 'TexasHoldEm', ->
 
     expect(-> game.bet('woodall', '10')).toThrow "Can't bet if you haven't played."
     game.sendCommand('bogdan', 'bet 3')
-    game.sendCommand('chrismo', 'bet 10') # demo auto-call
-    game.sendCommand('romer', 'bet 12')
+    game.sendCommand('chrismo', 'bet 10')
+    game.sendCommand('romer', 'bet 5')
+    game.sendCommand('romer', 'bet 7')
     game.sendCommand('sara', 'fold')
     # player can call at this point now. It's potentially confusing if the player
     # has a strict expectation that call either means no higher bets can be made
@@ -47,26 +48,27 @@ describe 'TexasHoldEm', ->
     # being able to issue this command at this point, presuming it would be
     # simply synonymous with "bet #{highest}".
     game.sendCommand('glv', 'call')
+    game.sendCommand('chrismo', 'bet 3')
 
     game.settleUp()
 
     expect(-> game.bet('romer', '5')).toThrow "No new bets."
     game.sendCommand('glv', 'call')
     game.sendCommand('bogdan', 'fold')
-    # chrismo does nothing and auto-calls
+    # romer does nothing and auto-calls the remaining 1 point owed
 
     game.finishRound()
 
     expect(game.winningHandResult.playerName).toBe 'romer'
     expect(game.winningHandResult.matchedHand.hand.name).toBe 'Full House'
     expect(game.playerStore[0].name).toBe 'chrismo'
-    expect(game.playerStore[0].points).toBe 25 - 1 - 12
+    expect(game.playerStore[0].points).toBe 25 - 1 - 13
     expect(game.playerStore[1].name).toBe 'romer'
-    expect(game.playerStore[1].points).toBe 25 - 1 - 12 + (1 + 1 + 1 + 1 + 1) + (12 + 12 + 12 + 3)
+    expect(game.playerStore[1].points).toBe 25 - 1 - 13 + (1 + 1 + 1 + 1 + 1) + (13 + 13 + 13 + 3)
     expect(game.playerStore[2].name).toBe 'sara'
     expect(game.playerStore[2].points).toBe 25 - 1
     expect(game.playerStore[3].name).toBe 'glv'
-    expect(game.playerStore[3].points).toBe 25 - 1 - 12
+    expect(game.playerStore[3].points).toBe 25 - 1 - 13
     expect(game.playerStore[4].name).toBe 'bogdan'
     expect(game.playerStore[4].points).toBe 25 - 1 - 3
 
@@ -79,6 +81,18 @@ describe 'TexasHoldEm', ->
     game.startNewRound()
 
     expect(game.playState.name).toBe 'play'
+
+  it 'bet round bug', ->
+    # this simple test drove out a funky playState bug.
+    # see the big comment in BetPlayState.nextRound()
+    game.sendCommand('chrismo', 'deal')
+    game.sendCommand('sara', 'deal')
+
+    time.now = builder.withMinute(1).build()
+    time.execCallback()
+
+    expect(game.playState.name).toBe 'bet'
+
 
 
 class FakeListener

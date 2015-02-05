@@ -7,7 +7,6 @@ Rounds = require('../poker/round')
 CardPoker = require('./core')
 Hand = require('./hand')
 
-# TODO: betting rounds in between various card flops
 # TODO: split pot (if multiple players best hand are the community cards)
 # TODO: sequential player betting
 # TODO support separate Board and Score commands, so the board could be shown, but also overall players point list
@@ -35,11 +34,12 @@ module.exports = class TexasHoldEm extends Game.BaseGame
     @time ||= new Rounds.TimeProvider
     this.setNewPlayState(new HandsPlayState(this, this.startBetting))
     @pot = new Pot(1)
-    @betDuration = 0.5
+    @communityDurations = 0.333
     @settleDuration = 0.5
     @endDuration = 0.1
     @playerStartingPoints = 100
     @dealCommand = new GameCommand(/^deal$/i, this.deal, => ("deal"))
+    # TODO: random provider removed - AI still tries to use it here, though
     @betCommand = new GameCommand(/^bet (\d+)$/i, this.bet, => ("bet #{this.randomProvider.randomInt(20)}"))
     @foldCommand = new GameCommand(/^fold$/i, this.fold, => ("fold"))
     @callCommand = new GameCommand(/^call$/i, this.call, => ("call"))
@@ -107,7 +107,7 @@ module.exports = class TexasHoldEm extends Game.BaseGame
       false
 
   allBetsSettled: ->
-    this.finishRound() if @pot.allBetsSettled()
+    this.finishRound() if @playState.name == 'settle' && @pot.allBetsSettled()
 
   fundPlayer: (playerName, amount) ->
     player = this.getPlayerFromStore(playerName)
@@ -150,6 +150,8 @@ module.exports = class TexasHoldEm extends Game.BaseGame
     @deck = new CardPoker.Deck()
     @deck.shuffle()
     @holeCards = @deck.deal(5)
+    @hiddenHoleCards = 5
+    @winningHandResult = null
     this.pushStatus("1 point ante.")
 
   startBetting: ->
@@ -182,9 +184,9 @@ module.exports = class TexasHoldEm extends Game.BaseGame
     handResults.sort (a, b) -> a.compare(b)
 
   showBoard: ->
-    communityCards = "#{@holeCards.display()}"
+    communityCards = this.formatHoleCards()
 
-    status = if this.isOver()
+    status = if @winningHandResult?
       "Winner: #{@winningHandResult.playerName}"
     else
       @playState.status()
@@ -198,6 +200,19 @@ module.exports = class TexasHoldEm extends Game.BaseGame
 
     hands = (this.formatHandResult handResult for handResult in this.handsInWinningOrder())
     header.concat(hands)
+
+  formatHoleCards: ->
+    show = (@holeCards.cards[i].display() for i in [0..(4-@hiddenHoleCards)] by 1)
+    hide = ('[X]' for i in [1..@hiddenHoleCards] by 1)
+    "#{show.join(' ')}#{hide.join('')}"
+
+  revealMoreHoleCards: ->
+    if @hiddenHoleCards == 5
+      @hiddenHoleCards = 2
+    else if @hiddenHoleCards == 2
+      @hiddenHoleCards = 1
+    else
+      @hiddenHoleCards = 0
 
   formatHandResult: (handResult) ->
     if this.isOver()
@@ -273,33 +288,56 @@ class HandsPlayState extends PlayState
     'Play'
 
   boardInstructions: ->
-    ''
+    'deal | bet [xx] | call | fold'
 
   vetAction: (action) ->
-    throw "You can't bet now." if action == 'bet'
+
 
   commands: ->
-    [@game.dealCommand]
+    [@game.dealCommand, @game.betCommand, @game.foldCommand, @game.callCommand]
 
 
 class BetPlayState extends PlayState
   constructor: (@game, nextState) ->
     super(@game, nextState)
     @name = 'bet'
-    @game.pushStatus ["Hands are locked. Time to bet. Type 'bet' and a number.",
-                      "Type 'call' to match the highest bid so far.",
-                      "Type 'fold' to fold and forfeit anything bet already."].join("\n")
-    @rounds = [new Rounds.TimedRound(@game.betDuration, @game.time)]
+    @game.pushStatus ["No new players. Flop, turn and river 20 seconds apart.",
+                      "`bet [xx]`, `call` or `fold` at any time. *Doing nothing will automatically call*"].join("\n")
+    @rounds = [
+      new Rounds.TimedRound(@game.communityDurations, @game.time),
+      new Rounds.TimedRound(@game.communityDurations, @game.time),
+      new Rounds.TimedRound(@game.communityDurations, @game.time),
+    ]
     this.nextRound()
+
+  nextRound: ->
+    super
+    @game.pot.settleUp()
+    @game.revealMoreHoleCards()
+
+    # this conditional is really important and hard to explain.
+    # the FIRST time through, this code is executed as part of
+    # a timeout callback ending the HandsPlayState and creating
+    # the BetPlayState. @game.playState is still HandsPlayState
+    # which has an undefined @round instance. Requesting a board
+    # push then FAILS because @game.isOver() breaks due to the
+    # HandsPlayState.round being undefined. In that case we
+    # don't need to push the board because startBetting will
+    # handle it.
+    #
+    # Subsequent times through this code, nothing is happening
+    # within the game instance, so we need to ensure the board
+    # is pushed, showing the newly revealed community cards.
+    @game.pushBoard() if @rounds.length < 2
 
   status: ->
     'Bet'
 
   boardInstructions: ->
-    'bet [xx] | call | fold'
+    'bet [xx] | call | fold ||  *auto-call in effect every 20 seconds*'
 
   vetAction: (action, betAction) ->
-    throw "Hands are locked" if action == 'play'
+    throw "Hands are locked." if action == 'play'
 
   commands: ->
     [@game.betCommand, @game.foldCommand, @game.callCommand]
@@ -310,9 +348,7 @@ class SettlePlayState extends PlayState
     super(@game, nextState)
     @name = 'settle'
     @game.pushStatus ["No new bets. Time to settle up. ",
-                      "Type 'call' to match the highest bid and stay in.",
-                      "Type 'fold' to fold and forfeit anything bet already.",
-                      "* Doing nothing will automatically call *"].join("\n")
+                      "`call` or `fold`. *Doing nothing will automatically call*"].join("\n")
     @rounds = [new Rounds.TimedRound(@game.settleDuration, @game.time)]
     this.nextRound()
 
@@ -320,7 +356,7 @@ class SettlePlayState extends PlayState
     'Settle'
 
   boardInstructions: ->
-    'call | fold  ||  ** auto-call in effect **'
+    'call | fold  ||  *auto-call in effect*'
 
   vetAction: (action, betAction) ->
     throw "Hands are locked." if action == 'play'
