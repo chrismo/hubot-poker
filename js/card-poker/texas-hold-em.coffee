@@ -8,8 +8,6 @@ CardPoker = require('./core')
 Hand = require('./hand')
 
 # TODO: split pot (if multiple players best hand are the community cards)
-# TODO: sequential player betting
-# TODO support separate Board and Score commands, so the board could be shown, but also overall players point list
 module.exports = class TexasHoldEm extends Game.BaseGame
   @help: ->
     [

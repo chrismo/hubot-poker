@@ -27,7 +27,6 @@ Dealer = require('./poker/dealer')
 
 rooms = the_robot = null
 
-# TODO: package up this whole thing in npm
 module.exports = (robot) ->
   the_robot = robot
   foldListener = null
@@ -82,7 +81,6 @@ module.exports = (robot) ->
     catch error
       msg.send error
 
-  # TODO: optionally protect admin commands by list of admins
   robot.hear /^poker admin (.*)/i, (msg) ->
     # OMG - It's like I'm trying to kill Uncle Bob with this code.
     try
