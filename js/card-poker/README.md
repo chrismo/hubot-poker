@@ -7,6 +7,12 @@ that can send direct messages to players, as this is how hole cards are dealt. T
 like Campfire don't support direct messages so there's currently no way to deal cards
 to players.
 
+*Slack*: Players need to establish a direct message link with the bot
+before the bot can deal cards to the player. The game should notify players of this
+situation when it happens.
+
+Other Platforms: No idea. Tell me how it goes.
+
 ## Differences from Real Texas Hold 'Em
 
 The goal of this game is to be something quick and easy to play while taking a quick
@@ -28,6 +34,33 @@ Players join by entering the `deal` command during the 1st minute. Once the deal
 phase is over, no more players can join. No player is automatically joined in the
 next round.
 
+#### Auto-Calling
+
+Any time community cards are revealed, the pot is settled up. This means any active
+player (any player that has not folded) will _automatically_ be called. For example:
+if Player A bets 20, then then the flop occurs, and you haven't folded, you'll
+automatically have 20 points deducted and put into the pot. See *Betting* section
+below for details. This happens _FOUR_ times every game: flop, turn, river and
+at the end when the winning hand is revealed.
+
+### Ties / Splitting the Pot
+
+There are currently no ties, but not for any reason other than needing to code it
+up (both hand comparison and splitting the pot to multiple players).
+
+The hand comparison code actually takes suit into account as a last resort
+(for no particular reason), so hands with the same ranks but different suits
+will give preference to suits by Spades, Hearts, Clubs, Diamonds, unlike real
+Texas Hold 'em.
+
+If the tied hands are entirely community cards, the tie is broken by whatever
+default computing order exists (probably the order the players joined the round).
+
+### Cards Shown on Folded Hands and Solo Winner
+
+This is just the default functionality. Those wanting to hide cards when they
+succeed at a bluff are out of luck thus far. (Get it? Out of LUCK! HA!!) Ahem.
+
 ### 'Wild West' Betting
 
 Until the settle up phase, when new bets are locked, players can bet at any time and
@@ -35,12 +68,14 @@ bet as many times as they want. Multiple bets from the same player accumulate (e
 `bet 3` + `bet 4` == `bet 7`).
 
 Issuing a `call` command is the same as `bet #{highest accumulated amount from a
-player} - #{what I've already bet so far}`. It makes you even in the Pot. Calling is
-not sticky: if more bets are made, raising the `highest player bet` amount in the Pot,
-a calling player will need to `bet` or `call` again.
+player} - #{what I've already bet so far}`. It makes you even in the Pot.
 
-Any player not explicitly folding before the end of the round will be automatically
-called, to contribute what they owe.
+Any player not explicitly folding before a settle up will be automatically called,
+to contribute what they owe. The pot is settled _every_ time a community card is
+revealed, and at the end of the round. If you aren't paying attention, other players
+can force you to bet a lot of points. If you don't like your chances, fold.
+
+Players can fold at any time, and folding forfeits any money already bet to the pot.
 
 Players without enough points to match the highest bet remain in the game and are
 essentially 'all in'. Players without any points after the round will not be allowed
@@ -51,13 +86,11 @@ up phase), and the game will make sure all players remaining in the game have
 contributed an equal number of points to the Pot up to the maximum number of points
 they have.
 
-Players can fold at any time, and folding forfeits any money already bet to the pot.
-
 In the final phase of the game, no new bets are accepted, players can only call or
 fold. Any player not folding will automatically call to match the highest bid by
 the end of the round.
 
-Example:
+#### Betting Example
 
 5 Players, each with 25 points.
 ```
@@ -108,16 +141,3 @@ Player B wins and ends up with 58 points:
 
 (This scenario is an automated test, see `texas-hold-em-spec.coffee`).
 
-
-### Ties / Splitting the Pot
-
-There are currently no ties, but not for any reason other than needing to code it
-up (both hand comparison and splitting the pot to multiple players).
-
-The hand comparison code actually takes suit into account as a last resort
-(for no particular reason), so hands with the same ranks but different suits
-will give preference to suits by Spades, Hearts, Clubs, Diamonds, unlike real
-Texas Hold 'em.
-
-If the tied hands are entirely community cards, the tie is broken by whatever
-default computing order exists (probably the order the players joined the round).
