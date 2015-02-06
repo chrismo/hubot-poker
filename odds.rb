@@ -6,6 +6,8 @@
 # But I didn't trust myself to get it right, and I realized it would be
 # fairly easy to just enumerate all million possible hands and count 'em
 # up.
+#
+# -- glv
 
 def groupings(digits)
   digits.group_by{|d| d}.map{|k,a| a.size}.sort.reverse.join
