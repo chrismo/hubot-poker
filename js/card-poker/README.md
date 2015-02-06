@@ -34,13 +34,13 @@ Players join by entering the `deal` command during the 1st minute. Once the deal
 phase is over, no more players can join. No player is automatically joined in the
 next round.
 
-#### Auto-Calling
+#### _Auto-Calling_
 
 Any time community cards are revealed, the pot is settled up. This means any active
 player (any player that has not folded) will _automatically_ be called. For example:
 if Player A bets 20, then then the flop occurs, and you haven't folded, you'll
 automatically have 20 points deducted and put into the pot. See *Betting* section
-below for details. This happens _FOUR_ times every game: flop, turn, river and
+below for details. This happens _FOUR_ times every round: flop, turn, river and
 at the end when the winning hand is revealed.
 
 ### Ties / Splitting the Pot
@@ -56,9 +56,15 @@ Texas Hold 'em.
 If the tied hands are entirely community cards, the tie is broken by whatever
 default computing order exists (probably the order the players joined the round).
 
+### Ace is Never Low
+
+From prior experience with token-poker, handling both high and low rank of Aces
+is sort of a pain in the neck. It's a low priority for now to handle both, but
+until then, Aces are high.
+
 ### Cards Shown on Folded Hands and Solo Winner
 
-This is just the default functionality. Those wanting to hide cards when they
+This is just the default functionality for now. Those wanting to hide cards when they
 succeed at a bluff are out of luck thus far. (Get it? Out of LUCK! HA!!) Ahem.
 
 ### 'Wild West' Betting
@@ -75,7 +81,7 @@ to contribute what they owe. The pot is settled _every_ time a community card is
 revealed, and at the end of the round. If you aren't paying attention, other players
 can force you to bet a lot of points. If you don't like your chances, fold.
 
-Players can fold at any time, and folding forfeits any money already bet to the pot.
+Players can fold at any time, and folding forfeits any points already bet to the pot.
 
 Players without enough points to match the highest bet remain in the game and are
 essentially 'all in'. Players without any points after the round will not be allowed
