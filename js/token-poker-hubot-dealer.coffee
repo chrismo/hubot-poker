@@ -158,6 +158,9 @@ class GameListener
   onStatus: (text) ->
     @robot.messageRoom @room, if _.isArray(text) then text.join("\n") else text
 
+  canPushToPlayer: (playerName) ->
+    @robot.adapter.client.getDMByName(playerName) != undefined
+
   onPushToPlayer: (playerName, msg) ->
     @robot.adapter.send {room: playerName}, msg if @robot.brain.userForName(playerName)
 

@@ -14,7 +14,7 @@ module.exports.FakeTimeProvider = class FakeTimeProvider
 
   execCallback: ->
     callback = @callbacks[@now.toUTCString()]
-    throw "none found in #{@callbacks}" if not callback
+    throw "no callback found in #{@callbacks}" if not callback
     callback() if callback
 
 module.exports.TimeBuilder = class TimeBuilder

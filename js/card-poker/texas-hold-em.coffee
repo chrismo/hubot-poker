@@ -88,6 +88,7 @@ module.exports = class TexasHoldEm extends Game.BaseGame
     # TODO: allow folding at anytime, but have to workaround checkForLoneWinner and call it again at the start of betting.
     @playState.vetAction('play')
     player = this.getPlayerFromStore(playerName)
+    throw "Send the bot a DM in order to have a hand dealt to you." unless this.canPushToPlayer(playerName)
     throw "No dough, no show." if player && player.points == 0
     throw "You already have a hand, #{playerName}" if this.isPlayerOnBoard(playerName)
     true

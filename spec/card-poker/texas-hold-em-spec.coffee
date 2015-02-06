@@ -13,8 +13,10 @@ describe 'TexasHoldEm', ->
     store = {}
     builder = new Fakes.TimeBuilder().withHour(1).withMinute(0).withSecond(0)
     time = new Fakes.FakeTimeProvider(builder.build())
+    listener = new FakeListener()
     game = new TexasHoldEm(store, time)
     game.playerStartingPoints = 25
+    game.addListener(listener)
 
   it 'basic gameplay with play, bet and settle rounds', ->
     game.startRound()
@@ -103,3 +105,6 @@ class FakeListener
 
   onStatus: (msg) ->
     @msgs.push msg
+
+  canPushToPlayer: (playerName) ->
+    true

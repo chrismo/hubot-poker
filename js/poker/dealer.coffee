@@ -70,6 +70,9 @@ module.exports = class Dealer
   onStatus: (status) ->
     l.onStatus(status) for l in @listeners
 
+  canPushToPlayer: (playerName) ->
+    l.canPushToPlayer(playerName) for l in @listeners
+
   onPushToPlayer: (playerName, msg) ->
     l.onPushToPlayer(playerName, msg) for l in @listeners
 

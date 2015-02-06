@@ -45,8 +45,20 @@ module.exports.BaseGame = class BaseGame
   pushStatus: (text) ->
     (l.onStatus(text) if l.onStatus) for l in @listeners
 
+  canPushToPlayer: (playerName) ->
+    for l in @listeners
+      if l.canPushToPlayer
+        return l.canPushToPlayer(playerName)
+      else
+        false
+
   pushToPlayer: (playerName, msg) ->
-    (l.onPushToPlayer(playerName, msg) if l.onPushToPlayer) for l in @listeners
+    for l in @listeners
+      if l.onPushToPlayer && l.canPushToPlayer
+        if l.canPushToPlayer(playerName)
+          l.onPushToPlayer(playerName, msg)
+        else
+          console.log("Push to player <#{playerName}> not attempted because canPushToPlayer returned false.")
 
 
 `
