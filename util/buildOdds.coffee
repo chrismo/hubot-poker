@@ -1,5 +1,5 @@
-Stockpile = require('./js/token-poker/stockpile')
-TPCore = require('./js/token-poker/core')
+Stockpile = require('./../js/token-poker/stockpile')
+TPCore = require('./../js/token-poker/core')
 
 class GameOddsCalculator
   execute: ->

@@ -1,18 +1,44 @@
 {
+  "name": "hubot-poker",
+  "version": "1.0.0",
+  "description": "Texas Hold 'em and some weirdo 6 digit poker-esque games.",
+  "main": "js/hubot-poker-dealer.coffee",
+
+  "files": [
+    "js",
+    "spec"
+  ],
+
   "repository" : {
     "type": "git",
-    "url":  "https://github.com/chrismo/token_poker"
+    "url":  "git://github.com/chrismo/hubot-poker"
+  },
+
+  "keywords": [
+    "game",
+    "hubot",
+    "slack",
+    "poker"
+  ],
+
+  "author": "chrismo <chrismo@clabs.org> (http://clabs.org)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chrismo/hubot-poker/issues"
   },
 
   "dependencies": {
-    "coffee-script": ">= 1.7.1",
-    "jasmine-node": ">= 1.14.0",
     "underscore": "1.6.0"
+  },
+
+  "devDependencies": {
+    "coffee-script": ">= 1.7.1",
+    "jasmine-node": ">= 1.14.0"
   },
 
   "engines": {
     "node": "0.10.x",
     "npm": "1.3.x"
   }
-}
 
+}
