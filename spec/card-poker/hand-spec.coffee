@@ -54,6 +54,12 @@ describe 'GroupedHand', ->
     hand = new CardPoker.GroupedHand('One Pair', '2', 2)
     expect(hand.compare(a, b)).toBe -7
 
+  it 'should sort full house cards properly', ->
+    playerHand = d.findAll(['KH', '8H', '8S', 'KS', 'KC', '7D', '9D'])
+    hand = new CardPoker.GroupedHand('Full House', '32', 2)
+    hand.sortCards(playerHand)
+    expect(playerHand.codes()).toBe '[KS,KH,KC,8S,8H,9D,7D]'
+
 
 describe 'StraightHand', ->
   d = sh = null
@@ -152,6 +158,12 @@ describe 'HandMatcher', ->
     expect(all[1].hand.name).toBe 'Flush'
     expect(all[2].hand.name).toBe 'Straight'
     expect(all[3].hand.name).toBe 'High Card'
+
+  it 'should sort best hand if full house', ->
+    matcher = new CardPoker.HandMatcher()
+    playerHand = d.findAll(['KH', '8H', '8S', 'KS', 'KC', '7D', '9D'])
+    highestMatch = matcher.matchHighest(playerHand)
+    expect(highestMatch.playerHand.codes()).toBe '[KS,KH,KC,8S,8H]'
 
 
 describe 'PlayerHand', ->

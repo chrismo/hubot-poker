@@ -142,6 +142,7 @@ module.exports.HandRegistry = class HandRegistry
 module.exports.MatchedHand = class MatchedHand
   constructor: (@hand, @playerHand) ->
     throw "playerHand does not match hand" unless @hand.matches(@playerHand)
+    @hand.sortCards(@playerHand)
 
   compare: (other) ->
     handDiff = @hand.rank - other.hand.rank
