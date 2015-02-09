@@ -1,5 +1,13 @@
 # Hubot Texas Hold 'Em
 
+## Setup
+
+No npm package published yet, add this to your `dependencies`:
+
+```
+"hubot-poker": "git://github.com/chrismo/hubot-poker.git"
+```
+
 ## Direct Message Support Required
 
 This game has only been tested with Slack's adapter, and requires an adapter/platform
