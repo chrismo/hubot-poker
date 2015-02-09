@@ -254,18 +254,6 @@ describe 'ReverseHoldEm', ->
 
     game.sendCommand('chrismo', '123123')
     expect(game.isStarted()).toBe true
-  #expect(game.playState.round.remainingMinutes()).toBe 2
-
-  it 'should clear timeouts if finishing happens early', ->
-    # need new functionality now that setAlarms is bypassed
-    expect(false).toBe true
-
-  it 'err', ->
-    'TypeError: Cannot call method ai of undefined' # during GameOverState
-
-  it 'end game scores are funky', ->
-    # 3 winning boards after first round
-    # 2 versions of the LAST round's board, then 3 of this round's
 
 
 class FakeListener

@@ -11,6 +11,18 @@ end
 CLEAN.clear
 CLEAN << Rake::FileList['{js,spec}/**/*.{js,map}']
 
+desc "Synonym for pack"
+task :build => :pack
+
+desc 'Execute `npm pack` to build the tgz file'
+task :pack do
+  system 'npm pack'
+end
+
+desc 'Synonym for publish'
+task :release => :publish
+
+desc 'Execute `npm publish` to push node package to npmjs.com'
 task :publish do
   system 'npm publish'
 end

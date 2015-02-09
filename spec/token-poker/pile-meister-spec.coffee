@@ -120,7 +120,3 @@ describe 'PileMeister', ->
   it 'should handle break call on empty chain', ->
     breakResult = game.break('chrismo')
     expect(breakResult.chainTotal).toBe 0
-
-  it 'should have spec covering round usage', ->
-    # nothing broke like in stockpile when round listening kicked in
-    expect(false).toBe true
