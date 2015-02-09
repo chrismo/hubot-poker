@@ -1,6 +1,6 @@
 {
   "name": "hubot-poker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Texas Hold 'em and some weirdo 6 digit poker-esque games.",
   "main": "js/hubot-poker-dealer.coffee",
 

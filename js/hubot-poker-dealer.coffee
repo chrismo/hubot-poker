@@ -22,7 +22,7 @@
 #   glv
 
 _ = require('underscore')
-Rooms = require('./token-poker/rooms')
+Rooms = require('./poker/rooms')
 Dealer = require('./poker/dealer')
 
 rooms = the_robot = null
