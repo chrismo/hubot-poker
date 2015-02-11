@@ -1,21 +1,28 @@
+_ = require('underscore')
+
 module.exports.FakeTimeProvider = class FakeTimeProvider
   constructor: (@now) ->
-    @callbacks = {}
+    @callbacks = []
 
   getTime: ->
     @now
 
   setTimeout: (callback, delayInMsecs) ->
     callbackWhen = new Date(@now.getTime() + delayInMsecs)
-    @callbacks[callbackWhen.toUTCString()] = callback
+    @callbacks.push {callbackWhen: callbackWhen.toUTCString(), callback: callback}
 
   clearTimeout: (timeout) ->
     timeout
 
   execCallback: ->
-    callback = @callbacks[@now.toUTCString()]
+    callback = _.detect(@callbacks, (c) => c.callbackWhen == @now.toUTCString()).callback
     throw "no callback found in #{@callbacks}" if not callback
     callback() if callback
+
+  execNextCallback: ->
+    callback = @callbacks.shift()
+    callback.callback() if callback?
+
 
 module.exports.TimeBuilder = class TimeBuilder
   constructor: ->
