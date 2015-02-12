@@ -6,6 +6,16 @@ module.exports = class AiPlayer
     @game.addListener(this)
     @time ||= new Rounds.TimeProvider
     @timeouts = []
+    @hand = null
+
+  canPushToPlayer: (playerName) ->
+    @name == playerName
+
+  onPushToPlayer: (playerName, msg) ->
+    # msg is hand.display(), so rather than rev engineer it, we'll get our
+    # cards from the game.
+    return unless playerName == @name
+    @hand = @game.boardStore[@name].playerHand
 
   onGameCommand: (playerCommand, parsedCommand, commandResult) ->
     this.queueCommand('deal')

@@ -57,8 +57,6 @@ module.exports.BaseGame = class BaseGame
       if l.onPushToPlayer && l.canPushToPlayer
         if l.canPushToPlayer(playerName)
           l.onPushToPlayer(playerName, msg)
-        else
-          console.log("Push to player <#{playerName}> not attempted because canPushToPlayer returned false.")
 
 
 `

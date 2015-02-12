@@ -55,8 +55,9 @@ module.exports = class TexasHoldEm extends Game.BaseGame
   deal: (playerName) ->
     this.vetPlayerForPlaying(playerName)
     player = this.ensurePlayerInStore(playerName)
-    playerHand = this.dealHand(playerName)
+    playerHand = @deck.deal(2)
     this.storeHandResult(new HandResult(player, playerHand, null))
+    this.pushToPlayer(playerName, playerHand.display())
     this.pushBoard()
     null # to indicate no reply is necessary, the board will be pushed
 
@@ -76,11 +77,6 @@ module.exports = class TexasHoldEm extends Game.BaseGame
     @pot.call(this.vetPlayerForBetting(playerName, 'call'))
     this.pushBoard() unless this.allBetsSettled()
     null
-
-  dealHand: (playerName) ->
-    hand = @deck.deal(2)
-    this.pushToPlayer(playerName, hand.display())
-    hand
 
   vetPlayerForPlaying: (playerName) ->
     # TODO: allow folding at anytime, but have to workaround checkForLoneWinner and call it again at the start of betting.
@@ -146,12 +142,15 @@ module.exports = class TexasHoldEm extends Game.BaseGame
   startRound: ->
     super
     @boardStore = @store.boardStore = {}
-    @deck = new CardPoker.Deck()
-    @deck.shuffle()
+    this.newDeck()
     @holeCards = @deck.deal(5)
     @hiddenHoleCards = 5
     @winningHandResult = null
     this.pushStatus("1 point ante.")
+
+  newDeck: ->
+    @deck = new CardPoker.Deck()
+    @deck.shuffle()
 
   startBetting: ->
     this.setNewPlayState(new BetPlayState(this, this.settleUp))
