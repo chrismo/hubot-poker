@@ -15,7 +15,7 @@ describe 'AiPlayer', ->
     game.playerStartingPoints = 25
     game.addListener(listener)
     game.deck = deck = new Core.Deck()
-    # override so we have unshuffled deck
+    # override so we have an unshuffled deck
     game.newDeck = -> deck
     ai = new AiPlayer('foobar', game, time)
 
@@ -26,9 +26,12 @@ describe 'AiPlayer', ->
     # with unshuffled deck, 2S-6S are community cards, 7S,8S go to chrismo, ai gets 9S,10S
     expect(ai.hand.codes()).toBe '[9S,10S]'
 
-  it 'should not alert about push to player with ai player'
-
-  it 'should not re-request a deal once dealt'
+  it 'should not re-request a deal once dealt', ->
+    game.sendCommand('sara', 'deal')
+    time.execNextCallback()
+    beforeCount = time.callbacks.length
+    game.sendCommand('glv', 'deal')
+    expect(time.callbacks.length).toBe beforeCount
 
   it 'should reset at round end so it can deal again when 1st player is dealt'
 

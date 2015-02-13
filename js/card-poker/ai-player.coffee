@@ -18,7 +18,7 @@ module.exports = class AiPlayer
     @hand = @game.boardStore[@name].playerHand
 
   onGameCommand: (playerCommand, parsedCommand, commandResult) ->
-    this.queueCommand('deal')
+    this.queueCommand('deal') unless @hand?
 
   queueCommand: (gameCommand, seconds) ->
     # need to space out the commands to not overwhelm the game
