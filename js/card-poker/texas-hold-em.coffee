@@ -157,6 +157,7 @@ module.exports = class TexasHoldEm extends Game.BaseGame
     this.pushBoard()
 
   finishRound: ->
+    super
     this.applyCommunityCards()
     @winningHandResult = this.handsInWinningOrder()[0]
     @pot.settleUp()

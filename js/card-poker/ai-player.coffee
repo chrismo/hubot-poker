@@ -29,3 +29,6 @@ module.exports = class AiPlayer
 
   randomInt: (maxExclusive) ->
     Math.floor(Math.random() * maxExclusive)
+
+  onFinishRound: ->
+    @hand = null

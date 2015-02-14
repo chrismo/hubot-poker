@@ -33,7 +33,11 @@ describe 'AiPlayer', ->
     game.sendCommand('glv', 'deal')
     expect(time.callbacks.length).toBe beforeCount
 
-  it 'should reset at round end so it can deal again when 1st player is dealt'
+  it 'should reset at round end so it can deal again when 1st player is dealt', ->
+    game.sendCommand('monica', 'deal')
+    time.execNextCallback()
+    game.finishRound()
+    expect(ai.hand?).toBe false
 
   it 'should know when '
 
